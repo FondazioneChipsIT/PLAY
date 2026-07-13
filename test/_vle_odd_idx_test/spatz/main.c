@@ -17,7 +17,7 @@ typedef float VAR_T;
 #endif
 
 #define N 16
-#define START_IDX 0
+#define START_IDX 1
 #define ULP_TOLL 80
 #define TOLL 0.004f
 
@@ -137,6 +137,8 @@ static void test_vle_odd_idx()
     p_src_a = src_a + START_IDX;
     p_src_b = src_b + START_IDX;
     p_dst = result + START_IDX;
+
+    avl = N - START_IDX;
 
     for (; avl > 0; avl -= vl) {
 
