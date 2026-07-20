@@ -9,6 +9,7 @@ static int linalg_gemv_trans_spatz_serial(const float *mat, const float *vec_x, 
     float ONE_f = 1.0f;
 
     const float *row_m;
+    const float *p_mat;
     float *p_dst;
     float elem_x;
 
@@ -34,6 +35,7 @@ static int linalg_gemv_trans_spatz_serial(const float *mat, const float *vec_x, 
 
     avl = dim_N;
     p_dst = dst;
+    p_mat = mat;
 
     for (; avl > 0; avl -= vl) {
         asm volatile ("vsetvli %0, %1, e32, m8, ta, ma" : "=r"(vl) : "r"(avl));
@@ -41,7 +43,7 @@ static int linalg_gemv_trans_spatz_serial(const float *mat, const float *vec_x, 
         asm volatile ("vle32.v v24, (%0)" :: "r"(p_dst));
 
         for (int m = 0; m < dim_M; m++) {
-            row_m = mat + (m * dim_N);
+            row_m = p_mat + (m * dim_N);
             elem_x = vec_x[m];
 
             asm volatile ("vle32.v v8, (%0)" :: "r"(row_m));
@@ -53,6 +55,7 @@ static int linalg_gemv_trans_spatz_serial(const float *mat, const float *vec_x, 
         asm volatile ("vse32.v v0, (%0)" :: "r"(p_dst));
 
         p_dst += vl;
+        p_mat += vl;
     }
 
     return 0;
