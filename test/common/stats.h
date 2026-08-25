@@ -36,7 +36,7 @@ void print_stats(unsigned long _cycles);
 #elif TARGET_IS_PULP_OPEN
 
 #define HOTTING     (2)
-#define REPEAT      (5)
+#define REPEAT      (1)
 
 #include "pmsis.h"
 
