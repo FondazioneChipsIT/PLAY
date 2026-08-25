@@ -88,6 +88,18 @@ def parse_and_save_stats(paths, test_dir_name, num_cores, output):
     print(f"Statistics data saved to {csv_filename}")
     return True
 
+def check_run_status(returncode, output, stats_saved):
+    if returncode != 0:
+        return f"MAKE FAILED (rc={returncode})"
+
+    if "Test SUCCESS" not in output:
+        return "TEST FAILED"
+
+    if not stats_saved:
+        return "NO STATS"
+
+    return "PASS"
+
 def run_test_case(args, paths, test_dir_name, num_cores):
     current_test_dir = os.path.join(paths.test_root, test_dir_name)
 
@@ -95,6 +107,8 @@ def run_test_case(args, paths, test_dir_name, num_cores):
 
     print(f"\n--- Running {test_dir_name} with {num_cores} cores ---")
     print(f"Command: cd {current_test_dir} && {make_command}")
+
+    status = "UNKNOWN"
 
     try:
         proc = subprocess.Popen(
@@ -114,13 +128,20 @@ def run_test_case(args, paths, test_dir_name, num_cores):
         proc.wait()
         result_stdout = ''.join(output_lines)
 
-        parse_and_save_stats(paths, test_dir_name, num_cores, result_stdout)
+        stats_saved = parse_and_save_stats(paths, test_dir_name, num_cores, result_stdout)
+        status = check_run_status(proc.returncode, result_stdout, stats_saved)
     except subprocess.CalledProcessError as e:
+        status = "MAKE ERROR"
         print(f"Error during compilation or execution for {test_dir_name} (cores={num_cores}):")
         print(f"STDOUT:\n{e.stdout}")
         print(f"STDERR:\n{e.stderr}")
     except Exception as e:
+        status = "SCRIPT ERROR"
         print(f"An unexpected error occurred: {e}")
+
+    print(f"--- Outcome for {test_dir_name} ({num_cores} cores): {status} ---")
+
+    return {'test': test_dir_name, 'cores': num_cores, 'status': status}
 
 
 def generate_markdown_report(platform_dir, results_dir):
@@ -231,16 +252,41 @@ def generate_markdown_report(platform_dir, results_dir):
 
     print(f"Markdown Report saved to {markdown_filename}")
 
+def save_run_summary(paths, outcomes):
+    summary_filename = os.path.join(paths.results_dir, "run_summary.csv")
+
+    with open(summary_filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['test', 'cores', 'status'], lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(outcomes)
+
+    print(f"Run summary saved to {summary_filename}")
+
+def print_run_summary(outcomes):
+    print("\n--- Run Summary ---")
+
+    failed = [outcome for outcome in outcomes if outcome['status'] != "PASS"]
+
+    print(f"Passed: {len(outcomes) - len(failed)}/{len(outcomes)}")
+
+    for outcome in failed:
+        print(f"  {outcome['status']:24} {outcome['test']} ({outcome['cores']} cores)")
+
 def main():
     args = parse_args()
     paths = set_paths(args)
     test_dirs = set_test_dirs(paths)
 
+    outcomes = []
+
     for test_dir_name in test_dirs:
-        run_test_case(args, paths, test_dir_name, 1)
-        run_test_case(args, paths, test_dir_name, 8)
+        outcomes.append(run_test_case(args, paths, test_dir_name, 1))
+        outcomes.append(run_test_case(args, paths, test_dir_name, 8))
 
     generate_markdown_report(paths.platform_dir, paths.results_dir)
+
+    save_run_summary(paths, outcomes)
+    print_run_summary(outcomes)
 
     print("\nAll tests and the report generation have been completed.")
 
