@@ -178,7 +178,9 @@ def generate_markdown_report(platform_dir, results_dir):
     test_data = {}
 
     for filename in os.listdir(results_dir):
-        if filename.endswith('.csv'):
+        # '_CL_' filters out run_summary.csv, which does not follow the
+        # <test>_CL_<cores>.csv naming and would break the parsing below
+        if filename.endswith('.csv') and '_CL_' in filename:
             file_path = os.path.join(results_dir, filename)
             parts = filename.split('_CL_')
             test_name = parts[0]
