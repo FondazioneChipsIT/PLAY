@@ -18,6 +18,24 @@ arch_filter = $(filter-out %/arch/%.c $(filter-out %/arch/%,$(1)),$(1))
 # Determine arch suffix based on TARGET. Defaults to empty.
 ifeq ($(TARGET),PULP_OPEN)
 ARCH_SUFFIX = pulp_open
+
+APP_CFLAGS += -mcmodel=medany -msmall-data-limit=0 -mno-relax -fno-jump-tables \
+              -ffunction-sections -fdata-sections \
+              -Wno-unused-variable -Wno-unused-function -Wundef
+
+APP_CFLAGS  += -flto -ffat-lto-objects
+
+APP_CFLAGS  += -fno-ipa-cp
+
+# Parita' di barriera con MAGIA: forza cv.elw al posto della lw semplice che
+# CONFIG_PULP seleziona in pulp-sdk (hal/eu/eu_v3.h). Non e' cosmesi: con lw il
+# core resta sveglio e mcycle conta l'attesa alla barriera, con cv.elw il clock
+# viene gated e mcycle NON la conta -- quindi senza questo la colonna `cycles`
+# misura grandezze diverse sulle due piattaforme. Vedi il ramo FORCE_CV_ELW in
+# pulp-sdk/rtos/pulpos/pulp_hal/include/hal/eu/eu_v3.h.
+APP_CFLAGS  += -DFORCE_CV_ELW
+
+APP_LDFLAGS += -flto -O3
 else ifeq ($(TARGET),SPATZ)
 ARCH_SUFFIX = spatz
 else
