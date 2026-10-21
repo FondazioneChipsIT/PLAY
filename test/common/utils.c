@@ -149,4 +149,30 @@ unsigned long get_cycle()
     return read_csr(mcycle);
 }
 
+#ifdef  PARK_IDLE_HARTS
+
+/*
+ * The Spatz cluster always has two core complexes. With NUM_CC=1 both harts
+ * get core index 0 and the same stack, and run main() side by side. On GVSoC
+ * they are not cycle-locked and end up corrupting each other's stack, so the
+ * harts beyond NUM_CC are parked here instead (main is wrapped at link time
+ * with -Wl,--wrap=main). A parked hart keeps answering the cluster hardware
+ * barrier, used by the kernels, without touching the stack.
+ */
+int __real_main(void);
+
+int __wrap_main(void)
+{
+    if (snrt_hartid() >= NUM_CC) {
+        volatile uint32_t *barrier_reg = (volatile uint32_t *) _snrt_barrier_reg_ptr();
+
+        while (1)
+            (void) *barrier_reg;
+    }
+
+    return __real_main();
+}
+
+#endif  /* PARK_IDLE_HARTS */
+
 #endif  /* TARGET_IS_SPATZ */

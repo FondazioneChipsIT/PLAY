@@ -55,10 +55,13 @@ Environment setup is a prerequisite for test execution, varying according to the
 To run a test targeting the Pulp Open architecture, it is necessary to install the RISCV GNU Toolchain and the pulp-sdk. Follow the instructions provided [here](https://github.com/pulp-platform/pulp-riscv-gnu-toolchain?tab=readme-ov-file#risc-v-gnu-compiler-toolchain) for the toolchain and [here](https://github.com/pulp-platform/pulp-sdk?tab=readme-ov-file#pulp-sdk) for the pulp-sdk.
 
 ##### Pulp Open on GVSoC
-Once installed the toolchain and sdk, simply set the PULP_RISCV_GCC_TOOLCHAIN environment variable to your toolchain path and source the pulp-open configuration from the SDK. For example:
+The pulp-sdk does not ship GVSoC anymore: it runs the simulation through the `gvrun` command of a standalone [GVSoC](https://github.com/gvsoc/gvsoc) installation, built at least for the `pulp-open` target (`make all TARGETS=pulp-open` from the GVSoC repository).
+
+Once installed the toolchain, the sdk and GVSoC, set the PULP_RISCV_GCC_TOOLCHAIN environment variable to your toolchain path, source the GVSoC environment and the pulp-open configuration from the SDK. For example:
 
 ```sh
 export PULP_RISCV_GCC_TOOLCHAIN="/opt/riscv"
+source /home/sam/repos/gvsoc/sourceme.sh
 source /home/sam/repos/pulp-sdk/configs/pulp-open.sh
 ```
 
@@ -78,12 +81,16 @@ export SPATZ_SW_DIR="/home/sam/repos/spatz/sw"
 **Note:** use the actual installation paths on your local machine.
 
 ##### Spatz on GVSoC
-To run a test targeting the Spatz architecture on GVSoC, it is necessary set an additional environment variable.
+To run a test targeting the Spatz architecture on GVSoC, it is necessary to build GVSoC for the `spatz_v3` target (`make all TARGETS=spatz_v3` from the GVSoC repository) and to set an additional environment variable pointing to the `gvsoc` executable of the installation. The simulation is launched with the `gvrun` command found next to it.
 
 ```sh
 export GVSOC_PATH="/home/sam/repos/gvsoc/install/bin/gvsoc"
 ```
 **Note:** use the actual installation paths on your local machine.
+
+The GVSoC target can be changed with the `GVSOC_TARGET` make variable (default `GVSOC_TARGET=spatz_v3`, the Spatz cluster model calibrated against the RTL).
+
+The simulated cluster always has two core complexes. When a test is built with `NUM_CC=1`, the second hart is parked before `main()` and only answers the cluster hardware barriers, so that it does not run the test on the same stack as the first one.
 
 ##### Spatz on Verilator
 To run a test targeting the Spatz architecture on Verilator, it is necessary set an additional environment variable.
@@ -121,6 +128,7 @@ For testing, several make flags are available:
 - Flags for `SPATZ`
     - `NUM_CC=<n>` - Number of Core-Complexes in Cluster (default `NUM_CC=1`, max value `NUM_CC=2`)
     - `PLATFORM=<platform`> - Emulator platform. Supported platforms are `GVSOC`, `VLT` and `VSIM` (default `VLT`)
+    - `GVSOC_TARGET=<target>` - GVSoC target used when `PLATFORM=GVSOC` (default `GVSOC_TARGET=spatz_v3`)
 
 To build and run a test, run:
 

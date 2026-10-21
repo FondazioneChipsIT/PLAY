@@ -8,7 +8,10 @@ ifeq ($(PLATFORM), GVSOC)
 ifeq ($(GVSOC_PATH),)
 $(error GVSOC_PATH is not set)
 endif
-RUNNER_CMD = $(GVSOC_PATH) --target spatz --binary $(APP) run
+GVSOC_TARGET ?= spatz_v3
+RUNNER_CMD = $(dir $(GVSOC_PATH))gvrun --target $(GVSOC_TARGET) --param chip/soc/binary=$(SPATZ_BUILD_DIR)$(APP) run
+APP_CFLAGS += -DPARK_IDLE_HARTS
+SPATZ_LDFLAGS += -Wl,--wrap=main
 
 else ifeq ($(PLATFORM), VLT)
 
@@ -92,7 +95,8 @@ CMAKE_CONFIG_COMMAND := $(CMAKE)\
 	-DSNRT_TCDM_START_ADDR=1048576 \
 	-DSNRT_CLUSTER_OFFSET=0 \
 	-DSNRT_TCDM_SIZE=131072 \
-	-DSNRT_NFPU_PER_CORE=4
+	-DSNRT_NFPU_PER_CORE=4 \
+	-DCMAKE_EXE_LINKER_FLAGS="$(SPATZ_LDFLAGS)"
 
 .PHONY: all config build run clean
 
