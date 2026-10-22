@@ -25,6 +25,13 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
     end = start + block + (id < left ? 1 : 0);
     rem_ops = dim_M % 2;
 
+    if (start >= end || dim_M < 2 || dim_N < 1) {
+        for (p = start; p < end; p++)
+            for (n = 0; n < dim_N; n++)
+                dst[n * dim_P + p] = (dim_M == 1 ? src_a[n] * src_b[p] : 0);
+        goto exit;
+    }
+
     p = start;
     do {
         n = 0;
@@ -67,12 +74,14 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
                 a = src_a[(dim_M - 1) * dim_N + n];
                 b = src_b[(dim_M - 1) * dim_P + p];
 
-                dst[n * dim_P + p] = a * b;
+                dst[n * dim_P + p] += a * b;
                 n++;
             } while (n < dim_N);
             p++;
         } while (p < end);
     }
+
+exit:
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
