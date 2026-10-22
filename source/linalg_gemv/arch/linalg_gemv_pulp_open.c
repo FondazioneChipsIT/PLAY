@@ -65,6 +65,12 @@ static int linalg_gemv_pulp_open_cluster(const float *mat, const float *vec_x, c
     row_end = row_start + block + (id < left ? 1 : 0);
     rem_ops = dim_N % 2;
 
+    if (row_start >= row_end || dim_N < 2) {
+        for (m = row_start; m < row_end; m++)
+            dst[m] = alpha * (dim_N == 1 ? mat[m] * vec_x[0] : ZERO_f) + beta * vec_y[m];
+        goto exit;
+    }
+
     m = row_start;
     if (rem_ops) {
         /* loop unroll will have leftovers */
@@ -83,6 +89,8 @@ static int linalg_gemv_pulp_open_cluster(const float *mat, const float *vec_x, c
             m++;
         } while (m < row_end);
     }
+
+exit:
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
