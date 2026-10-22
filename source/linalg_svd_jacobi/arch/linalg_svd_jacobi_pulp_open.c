@@ -66,41 +66,41 @@ int linalg_svd_jacobi_pulp_open_cluster( float *mat, float *mat_V, float *vec_S,
             int pair_start;
             int pair_end;
             int block;
+            int slots;
             int left;
 
             block = pairs_per_round / NUM_CORES;
             left = pairs_per_round % NUM_CORES;
             pair_start = id * block + (id < left ? id : left);
             pair_end = pair_start + block + (id < left ? 1 : 0);
+            slots = (pairs_per_round + NUM_CORES - 1) / NUM_CORES;
 
             local_max[id] = 0;
 
-            if (pair_start >= pair_end) {
-#ifdef ENABLE_LOGGING
-                    printf("ERROR | [core %d] Problem dimension is too small for the number of cores. Increase problem dimension or use less cores\n", id);
-#endif
-                pmsis_exit(-1);
-            }
-
-            for (int pair = pair_start; pair < pair_end; pair++) {
+            for (int slot = 0; slot < slots; slot++) {
                 bool compute;
                 float cos;
                 float sin;
                 float tau;
+                int pair;
                 float t;
                 int i;
                 int j;
 
                 barrier();
 
+                pair = pair_start + slot;
                 i = (round + pair) % (even_dim - 1);
                 j = (pair == 0) ? (even_dim - 1) : ((even_dim - 1 - pair + round) % (even_dim - 1));
 
                 compute = true;
+                if (pair >= pair_end)
+                    compute = false;
+
                 if (i >= dim_M || j >= dim_M)
                     compute = false;
 
-                if (fabs(mat[i * dim_M + j]) < EPSILON)
+                if (compute && fabs(mat[i * dim_M + j]) < EPSILON)
                     compute = false;
 
                 if (compute) {
