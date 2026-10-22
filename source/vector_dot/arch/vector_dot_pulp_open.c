@@ -12,29 +12,14 @@ static int vector_dot_pulp_open_cluster(const float *src_a, const float *src_b, 
 {
     float dot_tmp1;
     float dot_tmp2;
-    int rem_ops;
-    int tot_ops;
-    int block;
-    int start;
-    int left;
-    int end;
     int id;
-    int op;
     int i;
 
     id = pi_core_id();
-    block = len / NUM_CORES;
-    left = len % NUM_CORES;
-    start = id * block + (id < left ? id : left);
-    end = start + block + (id < left ? 1 : 0);
-    tot_ops = (end - start) / 2;
-    rem_ops = tot_ops % 2;
     dot_tmp1 = 0;
     dot_tmp2 = 0;
-    i = start;
-    op = 0;
 
-    do {
+    for (i = 2 * id; (i + 1) < len; i += 2 * NUM_CORES) {
         int idx1, idx2;
         float a1, a2;
         float b1, b2;
@@ -48,12 +33,10 @@ static int vector_dot_pulp_open_cluster(const float *src_a, const float *src_b, 
 
         dot_tmp1 += a1 * b1;
         dot_tmp2 += a2 * b2;
-        i += 2;
-        op++;
-    } while (op < tot_ops);
+    }
 
-    if (rem_ops)
-        dot_tmp1 += src_a[end - 1] * src_b[end - 1];
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dot_tmp1 += src_a[len - 1] * src_b[len - 1];
 
     /* Only master core computes final dot prod */
     local_dot[id] = dot_tmp1 + dot_tmp2;

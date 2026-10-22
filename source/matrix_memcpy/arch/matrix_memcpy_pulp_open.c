@@ -7,52 +7,28 @@
 
 int matrix_memcpy_pulp_open_cluster(const float *src, float *dst, const int dim_M, const int dim_N)
 {
-    int row_start;
-    int row_end;
-    int num_ops;
-    int rem_ops;
-    int block;
-    int left;
-    int m, n;
-    int ops;
+    int len;
     int id;
+    int i;
 
     id = pi_core_id();
-    block = dim_M / NUM_CORES;
-    left = dim_M % NUM_CORES;
-    row_start = id * block + (id < left ? id : left);
-    row_end = row_start + block + (id < left ? 1 : 0);
-    num_ops = dim_N / 2;
-    rem_ops = dim_N % 2;
+    len = dim_M * dim_N;
 
-    m = row_start;
-    do {
-        n = 0;
-        ops = 0;
-        do {
-            int idx1, idx2;
-            float src1, src2;
+    for (i = 2 * id; (i + 1) < len; i += 2 * NUM_CORES) {
+        int idx1, idx2;
+        float src1, src2;
 
-            idx1 = m * dim_N + n;
-            idx2 = m * dim_N + (n + 1);
-            src1 = src[idx1];
-            src2 = src[idx2];
+        idx1 = i;
+        idx2 = i + 1;
+        src1 = src[idx1];
+        src2 = src[idx2];
 
-            dst[idx1] = src1;
-            dst[idx2] = src2;
-            n += 2;
-            ops++;
-        } while (ops < num_ops);
-        m++;
-    } while (m < row_end);
-
-    if (rem_ops) {
-        m = row_start;
-        do {
-            dst[m * dim_N + (dim_N - 1)] = src[m * dim_N + (dim_N - 1)];
-            m++;
-        } while (m < row_end);
+        dst[idx1] = src1;
+        dst[idx2] = src2;
     }
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dst[len - 1] = src[len - 1];
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();

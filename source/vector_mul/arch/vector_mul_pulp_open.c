@@ -7,27 +7,12 @@
 
 static int vector_mul_pulp_open_parallel(const float *src_a, const float *src_b, float *dst, const int len)
 {
-    int tot_ops;
-    int rem_ops;
-    int block;
-    int start;
-    int left;
-    int end;
     int id;
-    int op;
     int i;
 
     id = pi_core_id();
-    block = len / NUM_CORES;
-    left = len % NUM_CORES;
-    start = id * block + (id < left ? id : left);
-    end = start + block + (id < left ? 1 : 0);
-    tot_ops = (end - start) / 2;
-    rem_ops = tot_ops % 2;
-    i = start;
-    op = 0;
 
-    do {
+    for (i = 2 * id; (i + 1) < len; i += 2 * NUM_CORES) {
         int idx1, idx2;
         float a1, a2;
         float b1, b2;
@@ -41,13 +26,10 @@ static int vector_mul_pulp_open_parallel(const float *src_a, const float *src_b,
 
         dst[idx1] = a1 * b1;
         dst[idx2] = a2 * b2;
+    }
 
-        i += 2;
-        op++;
-    } while (op < tot_ops);
-
-    if (rem_ops)
-        dst[end - 1] = src_a[end - 1] * src_b[end - 1];
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dst[len - 1] = src_a[len - 1] * src_b[len - 1];
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
