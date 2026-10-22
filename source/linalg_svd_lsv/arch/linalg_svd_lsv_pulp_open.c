@@ -35,6 +35,21 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
     tot_ops_N = dim_N / 2;
     rem_ops_N = dim_N % 2;
 
+    if (start >= end || dim_M < 2 || dim_N < 2) {
+        for (k = start; k < end; k++) {
+            float s;
+
+            s = vec_S[k];
+            for (m = 0; m < dim_M; m++) {
+                sum1 = 0;
+                for (n = 0; n < dim_N; n++)
+                    sum1 += src[m * dim_N + n] * mat_V[n * dim_N + k];
+                dst[m * dim_N + k] = (s < EPSILON ? 0 : sum1 / s);
+            }
+        }
+        goto exit;
+    }
+
     k = start;
     do {
         float s, s_inv;
@@ -54,6 +69,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
             if (rem_ops_M)
                 dst[(dim_M - 1) * dim_N + k] = 0;
 
+            k++;
             continue;
         } else {
             s_inv = ONE_f / s;
@@ -91,6 +107,8 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
 
         k++;
     } while (k < end);
+
+exit:
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
