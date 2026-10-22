@@ -57,18 +57,20 @@ static inline int set_permutation_identity(int *vec, const int len)
     left = len % NUM_CORES;
     start = id * block + (id < left ? id : left);
     end = start + block + (id < left ? 1 : 0);
-    num_ops = (start - end) / 2;
-    rem_ops = (start - end) % 2;
+    num_ops = (end - start) / 2;
+    rem_ops = (end - start) % 2;
     i = start;
     op = 0;
 
-    do {
-        vec[i] = i;
-        vec[i + 1] = (i + 1);
+    if (num_ops != 0) {
+        do {
+            vec[i] = i;
+            vec[i + 1] = (i + 1);
 
-        i += 2;
-        op++;
-    } while (op < num_ops);
+            i += 2;
+            op++;
+        } while (op < num_ops);
+    }
 
     if (rem_ops)
         vec[end - 1] = (end - 1);
@@ -77,6 +79,7 @@ static inline int set_permutation_identity(int *vec, const int len)
     pi_cl_team_barrier();
 #endif
 
+    return 0;
 }
 
 static int linalg_lu_decomp_pulp_open_cluster(float *mat, int *perm, const int dim_M, const int dim_N)
