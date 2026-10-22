@@ -50,11 +50,11 @@ static int linalg_gemv_trans_pulp_open_cluster(const float *mat, const float *ve
 
     if (alpha == ZERO_f) {
         if (beta == ZERO_f)
-            vector_set_all(dst, ZERO_f, dim_M);
+            vector_set_all(dst, ZERO_f, dim_N);
         else if (beta == ONE_f)
-            vector_memcpy(vec_y, dst, dim_M);
+            vector_memcpy(vec_y, dst, dim_N);
         else
-            vector_scale(vec_y, beta, dst, dim_M);
+            vector_scale(vec_y, beta, dst, dim_N);
         return 0;
     }
 
@@ -64,6 +64,12 @@ static int linalg_gemv_trans_pulp_open_cluster(const float *mat, const float *ve
     row_start = id * block + (id < left ? id : left);
     row_end = row_start + block + (id < left ? 1 : 0);
     rem_ops = dim_M % 2;
+
+    if (row_start >= row_end || dim_M < 2) {
+        for (n = row_start; n < row_end; n++)
+            dst[n] = alpha * (dim_M == 1 ? mat[n] * vec_x[0] : ZERO_f) + beta * vec_y[n];
+        goto exit;
+    }
 
     n = row_start;
     if (rem_ops) {
@@ -85,6 +91,8 @@ static int linalg_gemv_trans_pulp_open_cluster(const float *mat, const float *ve
         } while (n < row_end);
     }
 
+exit:
+
 #if NUM_CORES > 1
     pi_cl_team_barrier();
 #endif
@@ -103,11 +111,11 @@ static int linalg_gemv_trans_pulp_open_fc(const float *mat, const float *vec_x, 
 
     if (alpha == ZERO_f) {
         if (beta == ZERO_f)
-            vector_set_all(dst, ZERO_f, dim_M);
+            vector_set_all(dst, ZERO_f, dim_N);
         else if (beta == ONE_f)
-            vector_memcpy(vec_y, dst, dim_M);
+            vector_memcpy(vec_y, dst, dim_N);
         else
-            vector_scale(vec_y, beta, dst, dim_M);
+            vector_scale(vec_y, beta, dst, dim_N);
         return 0;
     }
 
