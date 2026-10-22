@@ -24,6 +24,13 @@ static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, 
     row_start = id * block + (id < left ? id : left);
     row_end = row_start + block + (id < left ? 1 : 0);
 
+    if (row_start >= row_end || dim_N < 2 || dim_P < 1) {
+        for (m = row_start; m < row_end; m++)
+            for (p = 0; p < dim_P; p++)
+                dst[m * dim_P + p] = (dim_N == 1 ? src_a[m] * src_b[p] : 0);
+        goto exit;
+    }
+
     rem_ops = dim_N % 2;
     m = row_start;
     do {
@@ -73,6 +80,8 @@ static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, 
             m++;
         } while (m < row_end);
     }
+
+exit:
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
