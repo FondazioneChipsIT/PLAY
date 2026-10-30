@@ -7,7 +7,8 @@ PI_L1 float *y;
 
 #ifdef  CLUSTER
 
-PI_L1 float local_sum[NUM_CORES];
+/* partial sums, double-buffered by row so that one barrier per row is enough */
+PI_L1 float local_sum[2][NUM_CORES];
 
 static inline void barrier()
 {
@@ -18,7 +19,8 @@ static inline void barrier()
 
 int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const int *perm, float *result, const int dim_M, const int dim_N)
 {
-    int perm_idx;
+    float *y_c;
+    float *x_c;
     int tot_ops;
     int rem_ops;
     float sum;
@@ -29,18 +31,23 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
     int id;
     int op;
     int k;
+    int r;
 
     id = pi_core_id();
     if (id == 0)
-        y = pmsis_l1_malloc(dim_M * sizeof(float));
+        y = pmsis_l1_malloc(2 * NUM_CORES * dim_M * sizeof(float));
 
     barrier();
 
+    /* Every core computes each y[m] and x[m] itself from the partial sums and keeps them in
+     * its own copy: nothing is shared after the barrier, and core 0 also writes the result */
+    y_c = y + id * dim_M;
+    x_c = y + (NUM_CORES + id) * dim_M;
+    r = 0;
+
     /* Forward substitution (L * y = perm * v) */
     for (int m = 0; m < dim_M; m++) {
-        sum = 0;
-        local_sum[id] = 0;
-        perm_idx = perm[m];
+        float sum1, sum2;
 
         block = m / NUM_CORES;
         left = m % NUM_CORES;
@@ -48,21 +55,15 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
         end = start + block + (id < left ? 1 : 0);
         tot_ops = (end - start) / 2;
         rem_ops = (end - start) % 2;
+        sum1 = 0;
+        sum2 = 0;
         k = start;
         op = 0;
 
         if (tot_ops != 0) {
             do {
-                float y1, y2;
-                float mat1, mat2;
-
-                y1 = y[k];
-                y2 = y[k + 1];
-                mat1 = mat[m * dim_N + k];
-                mat2 = mat[m * dim_N + (k + 1)];
-
-                local_sum[id] += mat1 * y1;
-                local_sum[id] += mat2 * y2;
+                sum1 += mat[m * dim_N + k] * y_c[k];
+                sum2 += mat[m * dim_N + (k + 1)] * y_c[k + 1];
 
                 k += 2;
                 op++;
@@ -70,21 +71,21 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
         }
 
         if (rem_ops)
-            local_sum[id] += mat[m * dim_N + (end - 1)] * y[end - 1];
+            sum1 += mat[m * dim_N + (end - 1)] * y_c[end - 1];
 
+        local_sum[r & 1][id] = sum1 + sum2;
         barrier();
-        if (id == 0) {
-            for (int i = 0; i < NUM_CORES; i++)
-                sum += local_sum[i];
-            y[m] = vec[perm_idx] - sum;
-        }
-        barrier();
+
+        sum = 0;
+        for (int i = 0; i < NUM_CORES; i++)
+            sum += local_sum[r & 1][i];
+        y_c[m] = vec[perm[m]] - sum;
+        r++;
     }
 
     /* Backward substitution (U * x = y) */
     for (int m = (dim_M - 1); m >= 0; m--) {
-        sum = 0;
-        local_sum[id] = 0;
+        float sum1, sum2;
 
         block = (dim_N - (m + 1)) / NUM_CORES;
         left = (dim_N - (m + 1)) % NUM_CORES;
@@ -92,21 +93,15 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
         end = start + block + (id < left ? 1 : 0);
         tot_ops = (end - start) / 2;
         rem_ops = (end - start) % 2;
+        sum1 = 0;
+        sum2 = 0;
         k = start;
         op = 0;
 
         if (tot_ops != 0) {
             do {
-                float mat1, mat2;
-                float result1, result2;
-
-                result1 = result[k];
-                result2 = result[k + 1];
-                mat1 = mat[m * dim_N + k];
-                mat2 = mat[m * dim_N + (k + 1)];
-
-                local_sum[id] += mat1 * result1;
-                local_sum[id] += mat2 * result2;
+                sum1 += mat[m * dim_N + k] * x_c[k];
+                sum2 += mat[m * dim_N + (k + 1)] * x_c[k + 1];
 
                 k += 2;
                 op++;
@@ -114,19 +109,24 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
         }
 
         if (rem_ops)
-            local_sum[id] += mat[m * dim_N + (end - 1)] * result[end - 1];
+            sum1 += mat[m * dim_N + (end - 1)] * x_c[end - 1];
 
+        local_sum[r & 1][id] = sum1 + sum2;
         barrier();
-        if (id == 0) {
-            for (int i = 0; i < NUM_CORES; i++)
-                sum += local_sum[i];
-            result[m] = (y[m] - sum) / mat[m * dim_N + m];
-        }
-        barrier();
+
+        sum = 0;
+        for (int i = 0; i < NUM_CORES; i++)
+            sum += local_sum[r & 1][i];
+        x_c[m] = (y_c[m] - sum) / mat[m * dim_N + m];
+        if (id == 0)
+            result[m] = x_c[m];
+        r++;
     }
 
+    barrier();
+
     if (id == 0)
-        pmsis_l1_malloc_free(y, dim_M * sizeof(float));
+        pmsis_l1_malloc_free(y, 2 * NUM_CORES * dim_M * sizeof(float));
 
     barrier();
 
