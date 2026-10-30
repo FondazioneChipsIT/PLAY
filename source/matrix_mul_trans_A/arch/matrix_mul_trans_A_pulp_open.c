@@ -7,11 +7,8 @@
 
 static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
 {
+    int cols_pair;
     int m, n, p;
-    int num_ops;
-    int rem_ops;
-    float sum1;
-    float sum2;
     int start;
     int block;
     int left;
@@ -23,62 +20,110 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
     left = dim_P % NUM_CORES;
     start = id * block + (id < left ? id : left);
     end = start + block + (id < left ? 1 : 0);
-    rem_ops = dim_M % 2;
 
-    if (start >= end || dim_M < 2 || dim_N < 1) {
+    if (dim_M < 1) {
         for (p = start; p < end; p++)
             for (n = 0; n < dim_N; n++)
-                dst[n * dim_P + p] = (dim_M == 1 ? src_a[n] * src_b[p] : 0);
+                dst[n * dim_P + p] = 0;
         goto exit;
     }
 
-    p = start;
-    do {
-        n = 0;
-        do {
-            num_ops = dim_M / 2;
-            sum1 = 0;
-            sum2 = 0;
+    /* 2x2 blocks of dst: every step over m loads two elements of A (columns n, n+1)
+     * and two of B (columns p, p+1) and feeds four independent FMAs */
+    cols_pair = start + ((end - start) & ~1);
+
+    for (p = start; p < cols_pair; p += 2) {        /* columns p, p+1 of dst */
+        const float *b = src_b + p;                 /* B[0][p] */
+
+        for (n = 0; n + 1 < dim_N; n += 2) {        /* rows n, n+1 of dst */
+            const float *a = src_a + n;             /* A[0][n] */
+            float s00, s01, s10, s11;               /* dst[n][p], dst[n][p+1], dst[n+1][p], dst[n+1][p+1] */
+
+            s00 = 0;
+            s01 = 0;
+            s10 = 0;
+            s11 = 0;
             m = 0;
             do {
-                float src_a1, src_a2;
-                float src_b1, src_b2;
+                float a0, a1;
+                float b0, b1;
 
-                src_a1 = src_a[m * dim_N + n];
-                src_a2 = src_a[(m + 1) * dim_N + n];
-                src_b1 = src_b[m * dim_P + p];
-                src_b2 = src_b[(m + 1) * dim_P + p];
+                a0 = a[m * dim_N];                  /* A[m][n] */
+                a1 = a[m * dim_N + 1];              /* A[m][n+1] */
+                b0 = b[m * dim_P];                  /* B[m][p] */
+                b1 = b[m * dim_P + 1];              /* B[m][p+1] */
 
-                sum1 += src_a1 * src_b1;
-                sum2 += src_a2 * src_b2;
+                s00 += a0 * b0;                     /* dst[n][p] */
+                s01 += a0 * b1;                     /* dst[n][p+1] */
+                s10 += a1 * b0;                     /* dst[n+1][p] */
+                s11 += a1 * b1;                     /* dst[n+1][p+1] */
+                m++;
+            } while (m < dim_M);
 
-                m += 2;
-                num_ops--;
-            } while (num_ops > 0);
+            dst[n * dim_P + p] = s00;
+            dst[n * dim_P + (p + 1)] = s01;
+            dst[(n + 1) * dim_P + p] = s10;
+            dst[(n + 1) * dim_P + (p + 1)] = s11;
+        }
 
-            dst[n * dim_P + p] = sum1 + sum2;
-            n++;
-        } while (n < dim_N);
+        if (n < dim_N) {
+            /* odd dim_N: last column of A, 1x2 block */
+            const float *a = src_a + n;
+            float s0, s1;
 
-        p++;
-    } while (p < end);
-
-    if (rem_ops) {
-        p = start;
-        do {
-            n = 0;
+            s0 = 0;
+            s1 = 0;
+            m = 0;
             do {
-                float a;
-                float b;
+                float a0;
 
-                a = src_a[(dim_M - 1) * dim_N + n];
-                b = src_b[(dim_M - 1) * dim_P + p];
+                a0 = a[m * dim_N];
+                s0 += a0 * b[m * dim_P];
+                s1 += a0 * b[m * dim_P + 1];
+                m++;
+            } while (m < dim_M);
 
-                dst[n * dim_P + p] += a * b;
-                n++;
-            } while (n < dim_N);
-            p++;
-        } while (p < end);
+            dst[n * dim_P + p] = s0;
+            dst[n * dim_P + (p + 1)] = s1;
+        }
+    }
+
+    if (p < end) {
+        /* odd number of columns for this core: last column of B, 2x1 blocks then 1x1 */
+        const float *b = src_b + p;
+
+        for (n = 0; n + 1 < dim_N; n += 2) {
+            const float *a = src_a + n;
+            float s0, s1;
+
+            s0 = 0;
+            s1 = 0;
+            m = 0;
+            do {
+                float b0;
+
+                b0 = b[m * dim_P];
+                s0 += a[m * dim_N] * b0;
+                s1 += a[m * dim_N + 1] * b0;
+                m++;
+            } while (m < dim_M);
+
+            dst[n * dim_P + p] = s0;
+            dst[(n + 1) * dim_P + p] = s1;
+        }
+
+        if (n < dim_N) {
+            float s0;
+
+            s0 = 0;
+            m = 0;
+            do {
+                s0 += src_a[m * dim_N + n] * b[m * dim_P];
+                m++;
+            } while (m < dim_M);
+
+            dst[n * dim_P + p] = s0;
+        }
     }
 
 exit:
