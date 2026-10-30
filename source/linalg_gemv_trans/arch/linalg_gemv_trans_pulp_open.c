@@ -8,45 +8,15 @@
 PI_L1 float ZERO_f = 0.0f;
 PI_L1 float ONE_f = 1.0f;
 
-static inline void mat_vec_mul(const float *mat, const float *vec_x, const int n, const int dim_M, const int dim_N, float *sum1, float *sum2)
-{
-    int num_ops;
-    int ops;
-    int m;
-
-    m = 0;
-    ops = 0;
-    *sum1 = 0;
-    *sum2 = 0;
-    num_ops = dim_M / 2;
-    do {
-        float mat1, mat2;
-        float vec1, vec2;
-
-        mat1 = mat[m * dim_N + n];
-        mat2 = mat[(m + 1) * dim_N + n];
-        vec1 = vec_x[m];
-        vec2 = vec_x[m + 1];
-
-        *sum1 += mat1 * vec1;
-        *sum2 += mat2 * vec2;
-
-        m += 2;
-        ops++;
-    } while (ops < num_ops);
-}
-
 static int linalg_gemv_trans_pulp_open_cluster(const float *mat, const float *vec_x, const float *vec_y, const float alpha, const float beta, float *dst, const int dim_M, const int dim_N)
 {
-    int row_start;
-    int row_end;
-    int rem_ops;
-    float sum1;
-    float sum2;
+    int col_start;
+    int col_end;
+    int cols_quad;
     int block;
     int left;
     int id;
-    int n;
+    int m, n;
 
     if (alpha == ZERO_f) {
         if (beta == ZERO_f)
@@ -61,34 +31,59 @@ static int linalg_gemv_trans_pulp_open_cluster(const float *mat, const float *ve
     id = pi_core_id();
     block = dim_N / NUM_CORES;
     left = dim_N % NUM_CORES;
-    row_start = id * block + (id < left ? id : left);
-    row_end = row_start + block + (id < left ? 1 : 0);
-    rem_ops = dim_M % 2;
+    col_start = id * block + (id < left ? id : left);
+    col_end = col_start + block + (id < left ? 1 : 0);
 
-    if (row_start >= row_end || dim_M < 2) {
-        for (n = row_start; n < row_end; n++)
+    if (dim_M < 2) {
+        for (n = col_start; n < col_end; n++)
             dst[n] = alpha * (dim_M == 1 ? mat[n] * vec_x[0] : ZERO_f) + beta * vec_y[n];
         goto exit;
     }
 
-    n = row_start;
-    if (rem_ops) {
-        /* loop unroll will have leftovers */
-        do {
-            mat_vec_mul(mat, vec_x, n, dim_M, dim_N, &sum1, &sum2);
-            /* leftover */
-            sum1 += mat[(dim_M - 1) * dim_N + n] * vec_x[dim_M - 1];
-            dst[n] = alpha * (sum1 + sum2) + beta * vec_y[n];
-            n++;
-        } while (n < row_end);
+    /* four columns at a time */
+    cols_quad = col_start + ((col_end - col_start) & ~3);
 
-    } else {
-        /* loop unroll will NOT have leftovers */
+    for (n = col_start; n < cols_quad; n += 4) {    /* columns n..n+3 of mat, dst[n]..dst[n+3] */
+        const float *c = mat + n;                   /* mat[0][n] */
+        float s0, s1, s2, s3;                       /* dst[n]..dst[n+3], before alpha and beta */
+
+        s0 = 0;
+        s1 = 0;
+        s2 = 0;
+        s3 = 0;
+        m = 0;
         do {
-            mat_vec_mul(mat, vec_x, n, dim_M, dim_N, &sum1, &sum2);
-            dst[n] = alpha * (sum1 + sum2) + beta * vec_y[n];
-            n++;
-        } while (n < row_end);
+            float x;
+
+            x = vec_x[m];                           /* vec_x[m], shared by the four columns */
+            s0 += c[m * dim_N] * x;                 /* mat[m][n] * vec_x[m] */
+            s1 += c[m * dim_N + 1] * x;             /* mat[m][n+1] * vec_x[m] */
+            s2 += c[m * dim_N + 2] * x;             /* mat[m][n+2] * vec_x[m] */
+            s3 += c[m * dim_N + 3] * x;             /* mat[m][n+3] * vec_x[m] */
+            m++;
+        } while (m < dim_M);
+
+        dst[n] = alpha * s0 + beta * vec_y[n];
+        dst[n + 1] = alpha * s1 + beta * vec_y[n + 1];
+        dst[n + 2] = alpha * s2 + beta * vec_y[n + 2];
+        dst[n + 3] = alpha * s3 + beta * vec_y[n + 3];
+    }
+
+    for (; n < col_end; n++) {
+        /* leftover columns, one at a time with two accumulators */
+        const float *c = mat + n;
+        float s0, s1;
+
+        s0 = 0;
+        s1 = 0;
+        for (m = 0; m + 1 < dim_M; m += 2) {
+            s0 += c[m * dim_N] * vec_x[m];
+            s1 += c[(m + 1) * dim_N] * vec_x[m + 1];
+        }
+        if (m < dim_M)
+            s0 += c[m * dim_N] * vec_x[m];
+
+        dst[n] = alpha * (s0 + s1) + beta * vec_y[n];
     }
 
 exit:
