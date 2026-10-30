@@ -10,9 +10,6 @@
 
 PI_L1 float ONE_f = 1.0f;
 
-PI_L1 float local_sum1[NUM_CORES];
-PI_L1 float local_sum2[NUM_CORES];
-
 static inline void barrier()
 {
 #if NUM_CORES > 1
@@ -38,48 +35,36 @@ static int linalg_cholesky_decomp_pulp_open_cluster(const float *src, float *dst
         int idx_mm;
 
         idx_mm = m * dim + m;
-        local_sum1[id] = 0;
-        local_sum2[id] = 0;
 
-        block = m / NUM_CORES;
-        left = m % NUM_CORES;
-        start = id * block + (id < left ? id : left);
-        end = start + block + (id < left ? 1 : 0);
-        num_ops = (end - start) / 2;
-        rem_ops = (end - start) % 2;
-        n = start;
+        /* Every core computes the diagonal element on its own: row m up to column m - 1
+         * is complete since the previous column, so there are no partial sums, no
+         * reduction on core 0 and no barriers around it. Core 0 stores it. */
+        float dst_mm_inv;
+        {
+            const float *rm = dst + m * dim;
+            float sq1 = 0;
+            float sq2 = 0;
+            float dst_mm;
 
-        for (op = 0; op < num_ops; op++) {
-            int idx1, idx2;
-            float dst1, dst2;
+            num_ops = m / 2;
+            n = 0;
+            if (num_ops > 0) {
+                do {
+                    sq1 += rm[n] * rm[n];
+                    sq2 += rm[n + 1] * rm[n + 1];
+                    n += 2;
+                    num_ops--;
+                } while (num_ops > 0);
+            }
+            if (m % 2)
+                sq1 += rm[m - 1] * rm[m - 1];
 
-            idx1 = m * dim + n;
-            idx2 = m * dim + (n + 1);
-            dst1 = dst[idx1];
-            dst2 = dst[idx2];
-
-            local_sum1[id] += dst1 * dst1;
-            local_sum2[id] += dst2 * dst2;
-            n += 2;
+            dst_mm = sqrtf(src[idx_mm] - (sq1 + sq2));
+            dst_mm_inv = ONE_f / dst_mm;
+            if (id == 0)
+                dst[idx_mm] = dst_mm;
         }
 
-        if (rem_ops)
-            local_sum1[id] += dst[m * dim + (end - 1)] * dst[m * dim + (end - 1)];
-
-        barrier();
-
-        if (id == 0) {
-            float sum = 0;
-
-            for (int i = 0; i < NUM_CORES; i++)
-                sum += local_sum1[i] + local_sum2[i];
-
-            dst[idx_mm] = sqrtf(src[idx_mm] - sum);
-        }   /* id 0 */
-
-        barrier();
-
-        float dst_mm_inv = ONE_f / dst[idx_mm];
         block = (dim - (m + 1)) / NUM_CORES;
         left = (dim - (m + 1)) % NUM_CORES;
         start = id * block + (id < left ? id : left) + (m + 1);
