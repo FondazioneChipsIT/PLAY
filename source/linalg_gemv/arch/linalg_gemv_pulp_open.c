@@ -8,45 +8,15 @@
 PI_L1 float ZERO_f = 0.0f;
 PI_L1 float ONE_f = 1.0f;
 
-static inline void mat_vec_mul(const float *mat, const float *vec_x, const int m, const int dim_M, const int dim_N, float *sum1, float *sum2)
-{
-    int num_ops;
-    int ops;
-    int n;
-
-    n = 0;
-    ops = 0;
-    *sum1 = 0;
-    *sum2 = 0;
-    num_ops = dim_N / 2;
-    do {
-        float mat1, mat2;
-        float vec1, vec2;
-
-        mat1 = mat[m * dim_N + n];
-        mat2 = mat[m * dim_N + (n + 1)];
-        vec1 = vec_x[n];
-        vec2 = vec_x[n + 1];
-
-        *sum1 += mat1 * vec1;
-        *sum2 += mat2 * vec2;
-
-        n += 2;
-        ops++;
-    } while (ops < num_ops);
-}
-
 static int linalg_gemv_pulp_open_cluster(const float *mat, const float *vec_x, const float *vec_y, const float alpha, const float beta, float *dst, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
-    int rem_ops;
-    float sum1;
-    float sum2;
+    int rows_quad;
     int block;
     int left;
     int id;
-    int m;
+    int m, n;
 
     if (alpha == ZERO_f) {
         if (beta == ZERO_f)
@@ -63,31 +33,60 @@ static int linalg_gemv_pulp_open_cluster(const float *mat, const float *vec_x, c
     left = dim_M % NUM_CORES;
     row_start = id * block + (id < left ? id : left);
     row_end = row_start + block + (id < left ? 1 : 0);
-    rem_ops = dim_N % 2;
 
-    if (row_start >= row_end || dim_N < 2) {
+    if (dim_N < 2) {
         for (m = row_start; m < row_end; m++)
             dst[m] = alpha * (dim_N == 1 ? mat[m] * vec_x[0] : ZERO_f) + beta * vec_y[m];
         goto exit;
     }
 
-    m = row_start;
-    if (rem_ops) {
-        /* loop unroll will have leftovers */
+    /* four rows at a time */
+    rows_quad = row_start + ((row_end - row_start) & ~3);
+
+    for (m = row_start; m < rows_quad; m += 4) {    /* rows m..m+3 of mat and dst */
+        const float *r0 = mat + m * dim_N;          /* row m of mat */
+        const float *r1 = r0 + dim_N;               /* row m+1 of mat */
+        const float *r2 = r1 + dim_N;               /* row m+2 of mat */
+        const float *r3 = r2 + dim_N;               /* row m+3 of mat */
+        float s0, s1, s2, s3;                       /* dst[m]..dst[m+3], before alpha and beta */
+
+        s0 = 0;
+        s1 = 0;
+        s2 = 0;
+        s3 = 0;
+        n = 0;
         do {
-            mat_vec_mul(mat, vec_x, m, dim_M, dim_N, &sum1, &sum2);
-            /* leftovers */
-            sum1 += mat[m * dim_N + (dim_N - 1)] * vec_x[dim_N - 1];
-            dst[m] = alpha * (sum1 + sum2) + beta * vec_y[m];
-            m++;
-        } while (m < row_end);
-    } else {
-        /* loop unroll will NOT have leftovers */
-        do {
-            mat_vec_mul(mat, vec_x, m, dim_M, dim_N, &sum1, &sum2);
-            dst[m] = alpha * (sum1 + sum2) + beta * vec_y[m];
-            m++;
-        } while (m < row_end);
+            float x;
+
+            x = vec_x[n];                           /* vec_x[n], shared by the four rows */
+            s0 += r0[n] * x;                        /* mat[m][n] * vec_x[n] */
+            s1 += r1[n] * x;                        /* mat[m+1][n] * vec_x[n] */
+            s2 += r2[n] * x;                        /* mat[m+2][n] * vec_x[n] */
+            s3 += r3[n] * x;                        /* mat[m+3][n] * vec_x[n] */
+            n++;
+        } while (n < dim_N);
+
+        dst[m] = alpha * s0 + beta * vec_y[m];
+        dst[m + 1] = alpha * s1 + beta * vec_y[m + 1];
+        dst[m + 2] = alpha * s2 + beta * vec_y[m + 2];
+        dst[m + 3] = alpha * s3 + beta * vec_y[m + 3];
+    }
+
+    for (; m < row_end; m++) {
+        /* leftover rows, one at a time with two accumulators */
+        const float *r0 = mat + m * dim_N;
+        float s0, s1;
+
+        s0 = 0;
+        s1 = 0;
+        for (n = 0; n + 1 < dim_N; n += 2) {
+            s0 += r0[n] * vec_x[n];
+            s1 += r0[n + 1] * vec_x[n + 1];
+        }
+        if (n < dim_N)
+            s0 += r0[n] * vec_x[n];
+
+        dst[m] = alpha * (s0 + s1) + beta * vec_y[m];
     }
 
 exit:
