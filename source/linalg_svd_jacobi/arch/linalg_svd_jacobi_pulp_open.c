@@ -14,8 +14,12 @@ static PI_L1 float TWO_f = 2.0f;
 static PI_L1 int MAX_ITER = 200;
 static PI_L1 float EPSILON = 1e-12;
 
-PI_L1 float local_max[NUM_CORES];
-PI_L1 float max_offdiag;
+/* indexed by round parity: a core may write the next round's maximum while a slower one
+ * is still reading this round's */
+PI_L1 float local_max[2][NUM_CORES];
+/* rotation of every pair of the current round, written in the row phase and read in the
+ * column phase: cos, sin (cos == 0 marks a pair that is not rotated), i, j */
+PI_L1 float *rot;
 
 static inline void barrier()
 {
@@ -49,6 +53,7 @@ static int matrix_set_identity(float *mat, const int dim_M)
 int linalg_svd_jacobi_pulp_open_cluster( float *mat, float *mat_V, float *vec_S, const int dim_M)
 {
     int pairs_per_round;
+    float max_offdiag;
     int even_dim;
     int iter;
     int id;
@@ -59,6 +64,13 @@ int linalg_svd_jacobi_pulp_open_cluster( float *mat, float *mat_V, float *vec_S,
     even_dim = (dim_M % 2 == 0) ? dim_M : (dim_M + 1);
     pairs_per_round = even_dim / 2;
 
+    max_offdiag = 0;
+
+    if (id == 0)
+        rot = pmsis_l1_malloc(4 * pairs_per_round * sizeof(float));
+
+    barrier();
+
     iter = 0;
     while (iter++ < MAX_ITER) {
 
@@ -66,37 +78,42 @@ int linalg_svd_jacobi_pulp_open_cluster( float *mat, float *mat_V, float *vec_S,
             int pair_start;
             int pair_end;
             int block;
-            int slots;
             int left;
+            float lmax;
 
             block = pairs_per_round / NUM_CORES;
             left = pairs_per_round % NUM_CORES;
             pair_start = id * block + (id < left ? id : left);
             pair_end = pair_start + block + (id < left ? 1 : 0);
-            slots = (pairs_per_round + NUM_CORES - 1) / NUM_CORES;
 
-            local_max[id] = 0;
-
-            for (int slot = 0; slot < slots; slot++) {
+            /* The pairs of a round are disjoint, and no rotation touches the elements
+             * (i,i), (j,j), (i,j) of another pair: all the row rotations of the round can
+             * go first and all the column rotations after, with one barrier in between
+             * instead of two per pair */
+            for (int pair = pair_start; pair < pair_end; pair++) {
                 bool compute;
                 float cos;
                 float sin;
                 float tau;
-                int pair;
                 float t;
                 int i;
                 int j;
 
-                barrier();
-
-                pair = pair_start + slot;
-                i = (round + pair) % (even_dim - 1);
-                j = (pair == 0) ? (even_dim - 1) : ((even_dim - 1 - pair + round) % (even_dim - 1));
+                /* round + pair and even_dim - 1 - pair + round stay below 2 * (even_dim - 1):
+                 * one conditional subtraction instead of the modulo (a division, up to 35
+                 * cycles on CV32E40P) */
+                i = round + pair;
+                if (i >= even_dim - 1)
+                    i -= even_dim - 1;
+                if (pair == 0) {
+                    j = even_dim - 1;
+                } else {
+                    j = even_dim - 1 - pair + round;
+                    if (j >= even_dim - 1)
+                        j -= even_dim - 1;
+                }
 
                 compute = true;
-                if (pair >= pair_end)
-                    compute = false;
-
                 if (i >= dim_M || j >= dim_M)
                     compute = false;
 
@@ -124,67 +141,86 @@ int linalg_svd_jacobi_pulp_open_cluster( float *mat, float *mat_V, float *vec_S,
                         mat[i * dim_M + m] = (cos * im) - (sin * jm);
                         mat[j * dim_M + m] = (sin * im) + (cos * jm);
                     }
+
+                } else {
+                    cos = 0;
+                    sin = 0;
                 }
 
-                barrier();
-
-                if (compute) {
-                    /* Update cols i and j of MAT */
-                    for (int n = 0; n < dim_M; n++) {
-                        float ni;
-                        float nj;
-
-                        ni = mat[n * dim_M + i];
-                        nj = mat[n * dim_M + j];
-
-                        mat[n * dim_M + i] = (cos * ni) - (sin * nj);
-                        mat[n * dim_M + j] = (sin * ni) + (cos * nj);
-                    }
-
-                    /* Update cols i and j of V */
-                    for (int n = 0; n < dim_M; n++) {
-                        float ni;
-                        float nj;
-
-                        ni = mat_V[n * dim_M + i];
-                        nj = mat_V[n * dim_M + j];
-
-                        mat_V[n * dim_M + i] = (cos * ni) - (sin * nj);
-                        mat_V[n * dim_M + j] = (sin * ni) + (cos * nj);
-                    }
-
-
-                    if (fabs(mat[i * dim_M + j]) > local_max[id])
-                        local_max[id] = fabs(mat[i * dim_M + j]);
-                }
-
-            } /* End of pairs for this round */
-
-            barrier();
-
-            /* Reduction */
-            if (id == 0) {
-                max_offdiag = local_max[0];
-                for (int cid = 1; cid < NUM_CORES; cid++)
-                    if (local_max[cid] > max_offdiag)
-                        max_offdiag = local_max[cid];
+                rot[4 * pair] = cos;
+                rot[4 * pair + 1] = sin;
+                ((int *) rot)[4 * pair + 2] = i;
+                ((int *) rot)[4 * pair + 3] = j;
             }
 
             barrier();
 
-            // pi_cl_team_critical_enter();
+            lmax = 0;
+            for (int pair = pair_start; pair < pair_end; pair++) {
+                float cos;
+                float sin;
+                int i;
+                int j;
+
+                cos = rot[4 * pair];
+                if (cos == ZERO_f)
+                    continue;
+
+                sin = rot[4 * pair + 1];
+                i = ((int *) rot)[4 * pair + 2];
+                j = ((int *) rot)[4 * pair + 3];
+
+                /* Update cols i and j of MAT */
+                for (int n = 0; n < dim_M; n++) {
+                    float ni;
+                    float nj;
+
+                    ni = mat[n * dim_M + i];
+                    nj = mat[n * dim_M + j];
+
+                    mat[n * dim_M + i] = (cos * ni) - (sin * nj);
+                    mat[n * dim_M + j] = (sin * ni) + (cos * nj);
+                }
+
+                /* Update cols i and j of V */
+                for (int n = 0; n < dim_M; n++) {
+                    float ni;
+                    float nj;
+
+                    ni = mat_V[n * dim_M + i];
+                    nj = mat_V[n * dim_M + j];
+
+                    mat_V[n * dim_M + i] = (cos * ni) - (sin * nj);
+                    mat_V[n * dim_M + j] = (sin * ni) + (cos * nj);
+                }
+
+                if (fabs(mat[i * dim_M + j]) > lmax)
+                    lmax = fabs(mat[i * dim_M + j]);
+            }
+
+            local_max[round & 1][id] = lmax;
+
+            barrier();
+
+            /* every core reduces on its own: no serial step on core 0, no extra barrier */
+            max_offdiag = local_max[round & 1][0];
+            for (int cid = 1; cid < NUM_CORES; cid++)
+                if (local_max[round & 1][cid] > max_offdiag)
+                    max_offdiag = local_max[round & 1][cid];
+
             if (max_offdiag < EPSILON)
                 break;
-            // pi_cl_team_critical_exit();
-
         }   /* Round */
 
-        // pi_cl_team_critical_enter();
         if (max_offdiag < EPSILON)
             break;
-        // pi_cl_team_critical_exit();
 
     }   /* Iters */
+
+    barrier();
+
+    if (id == 0)
+        pmsis_l1_malloc_free(rot, 4 * pairs_per_round * sizeof(float));
 
     if (iter >= MAX_ITER) {
 #ifdef ENABLE_LOGGING
