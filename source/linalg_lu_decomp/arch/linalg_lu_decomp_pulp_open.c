@@ -37,8 +37,10 @@ static inline int swap_rows(float *mat, const int row_a, const int row_b, const 
 
 #ifdef  CLUSTER
 
-PI_L1 float pivot;
-PI_L1 float p_inv;
+/* pivot candidate of each core: largest |value| in the column among its rows, with value and row */
+PI_L1 float local_max[NUM_CORES];
+PI_L1 float local_val[NUM_CORES];
+PI_L1 int local_row[NUM_CORES];
 
 static inline int set_permutation_identity(int *vec, const int len)
 {
@@ -84,7 +86,14 @@ static inline int set_permutation_identity(int *vec, const int len)
 
 static int linalg_lu_decomp_pulp_open_cluster(float *mat, int *perm, const int dim_M, const int dim_N)
 {
+    float max_val;
+    float val;
+    int row_max;
     int dim_min;
+    int start;
+    int block;
+    int left;
+    int end;
     int id;
 
     set_permutation_identity(perm, dim_M);
@@ -92,70 +101,120 @@ static int linalg_lu_decomp_pulp_open_cluster(float *mat, int *perm, const int d
     id = pi_core_id();
     dim_min = dim_M < dim_N ? dim_M : dim_N;
 
+    /* Partial pivoting is distributed: every core keeps the first largest |value| of the
+     * column among its own rows (here for column 0, then as a by-product of the elimination),
+     * so each step reduces NUM_CORES candidates instead of scanning the column on core 0 */
+    block = dim_M / NUM_CORES;
+    left = dim_M % NUM_CORES;
+    start = id * block + (id < left ? id : left);
+    end = start + block + (id < left ? 1 : 0);
+    max_val = -1;
+    val = 0;
+    row_max = -1;
+
+    for (int m = start; m < end; m++) {
+        float v, a;
+
+        v = mat[m * dim_N];
+        a = fabsf(v);
+        if (a > max_val) {
+            max_val = a;
+            val = v;
+            row_max = m;
+        }
+    }
+
+    local_max[id] = max_val;
+    local_val[id] = val;
+    local_row[id] = row_max;
+
     for (int k = 0; k < dim_min; k++) {
-        if (id == 0) {
-            /* Partial Pivoting */
-            int row_max;
-            float max_val;
-            float cur_val;
-
-            row_max = k;
-            max_val = fabs(mat[k * dim_N + k]);
-
-            for (int m = k + 1; m < dim_M; m++) {
-                cur_val = fabs(mat[m * dim_N + k]);
-                if (cur_val > max_val) {
-                    row_max = m;
-                    max_val = cur_val;
-                }
-            }
-
-            if (row_max != k) {
-                swap_rows(mat, k, row_max, dim_M, dim_N);
-                swap_elems(perm, k, row_max);
-            }
-
-            pivot = mat[k * dim_N + k];
-            if (pivot == 0) {
-#ifdef  ENABLE_LOGGING
-                printf("ERROR | Zero pivot found at position %d during LU decomposition - Matrix is singular\n", k);
-#endif  /* ENABLE_LOGGING */
-                pmsis_exit(-1);
-            } else {
-                p_inv = ONE_f / pivot;
-            }
-        }   /* id 0 */
+        float p_inv;
 
 #if NUM_CORES > 1
         pi_cl_team_barrier();
 #endif
 
-        /* Gaussian Elimination */
-        int start;
-        int block;
-        int left;
-        int end;
+        /* same reduction on every core, in core order: the first largest |value| wins */
+        max_val = -1;
+        for (int i = 0; i < NUM_CORES; i++) {
+            if (local_max[i] > max_val) {
+                max_val = local_max[i];
+                val = local_val[i];
+                row_max = local_row[i];
+            }
+        }
 
-        block = (dim_M - (k + 1)) / NUM_CORES;
-        left = (dim_M - (k + 1)) % NUM_CORES;
-        start = id * block + (id < left ? id : left) + (k + 1);
-        end = start + block + (id < left ? 1 : 0);
+        if (val == 0) {
+#ifdef  ENABLE_LOGGING
+            printf("ERROR | Zero pivot found at position %d during LU decomposition - Matrix is singular\n", k);
+#endif  /* ENABLE_LOGGING */
+            if (id == 0)
+                pmsis_exit(-1);
+        }
+        p_inv = ONE_f / val;
 
-        for (int m = start; m < end; m++) {
-            float factor;
+        if (row_max != k) {
+            /* rows k and row_max are swapped by columns, one slice per core */
+            block = dim_N / NUM_CORES;
+            left = dim_N % NUM_CORES;
+            start = id * block + (id < left ? id : left);
+            end = start + block + (id < left ? 1 : 0);
 
-            factor = mat[m * dim_N + k] * p_inv;
-            mat[m * dim_N + k] = factor;
+            for (int n = start; n < end; n++) {
+                float tmp;
 
-            for (int n = k + 1; n < dim_N; n++)
-                mat[m * dim_N + n] -= factor * mat[k * dim_N + n];
+                tmp = mat[k * dim_N + n];
+                mat[k * dim_N + n] = mat[row_max * dim_N + n];
+                mat[row_max * dim_N + n] = tmp;
+            }
+
+            if (id == 0)
+                swap_elems(perm, k, row_max);
         }
 
 #if NUM_CORES > 1
         pi_cl_team_barrier();
 #endif
 
+        /* Gaussian Elimination; the updated rows are the pivot candidates of column k+1 */
+        block = (dim_M - (k + 1)) / NUM_CORES;
+        left = (dim_M - (k + 1)) % NUM_CORES;
+        start = id * block + (id < left ? id : left) + (k + 1);
+        end = start + block + (id < left ? 1 : 0);
+        max_val = -1;
+        val = 0;
+        row_max = -1;
+
+        for (int m = start; m < end; m++) {
+            float factor;
+            float v, a;
+
+            factor = mat[m * dim_N + k] * p_inv;
+            mat[m * dim_N + k] = factor;
+
+            for (int n = k + 1; n < dim_N; n++)
+                mat[m * dim_N + n] -= factor * mat[k * dim_N + n];
+
+            if (k + 1 == dim_N)
+                continue;
+            v = mat[m * dim_N + (k + 1)];
+            a = fabsf(v);
+            if (a > max_val) {
+                max_val = a;
+                val = v;
+                row_max = m;
+            }
+        }
+
+        local_max[id] = max_val;
+        local_val[id] = val;
+        local_row[id] = row_max;
     }
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
 
     return 0;
 }
