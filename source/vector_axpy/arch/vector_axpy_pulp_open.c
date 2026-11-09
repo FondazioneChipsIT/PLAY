@@ -5,7 +5,7 @@
 
 #if CLUSTER
 
-static int vector_axpy_pulp_open_cluster(const float *src_a, const float *src_b, const float alpha, float *dst, const int len)
+static int vector_axpy_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len)
 {
     int rem_ops;
     int tot_ops;
@@ -29,8 +29,8 @@ static int vector_axpy_pulp_open_cluster(const float *src_a, const float *src_b,
 
     do {
         int idx1, idx2;
-        float a1, a2;
-        float b1, b2;
+        play_fmt_t a1, a2;
+        play_fmt_t b1, b2;
 
         idx1 = i;
         idx2 = i + 1;
@@ -58,7 +58,7 @@ static int vector_axpy_pulp_open_cluster(const float *src_a, const float *src_b,
 
 #else   /* CLUSTER */
 
-static int vector_axpy_pulp_open_fc(const float *src_a, const float *src_b, const float alpha, float *dst, const int len)
+static int vector_axpy_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src_a[i] * alpha + src_b[i];
@@ -68,7 +68,7 @@ static int vector_axpy_pulp_open_fc(const float *src_a, const float *src_b, cons
 
 #endif  /* CLUSTER */
 
-int vector_axpy_impl(const float *src_a, const float *src_b, const float alpha, float *dst, const int len)
+int vector_axpy_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len)
 {
     int ret;
 

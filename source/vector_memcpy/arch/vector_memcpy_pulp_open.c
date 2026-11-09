@@ -5,7 +5,7 @@
 
 #ifdef  CLUSTER
 
-static int vector_memcpy_pulp_open_cluster(const float *src, float *dst, const int len)
+static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -29,7 +29,7 @@ static int vector_memcpy_pulp_open_cluster(const float *src, float *dst, const i
 
     do {
         int idx1, idx2;
-        float src1, src2;
+        play_fmt_t src1, src2;
 
         idx1 = i;
         idx2 = i + 1;
@@ -55,7 +55,7 @@ static int vector_memcpy_pulp_open_cluster(const float *src, float *dst, const i
 
 #else   /* CLUSTER */
 
-static int vector_memcpy_pulp_open_fc(const float *src, float *dst, const int len)
+static int vector_memcpy_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src[i];
@@ -65,7 +65,7 @@ static int vector_memcpy_pulp_open_fc(const float *src, float *dst, const int le
 
 #endif  /* CLUSTER */
 
-int vector_memcpy_impl(const float *src, float *dst, const int len)
+int vector_memcpy_impl(const play_fmt_t *src, play_fmt_t *dst, const int len)
 {
     int ret;
 

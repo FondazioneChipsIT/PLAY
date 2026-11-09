@@ -5,7 +5,7 @@
 
 #ifdef CLUSTER
 
-static int vector_scale_pulp_open_cluster(const float *src, const float val, float *dst, const int len)
+static int vector_scale_pulp_open_cluster(const play_fmt_t *src, const play_fmt_t val, play_fmt_t *dst, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -29,7 +29,7 @@ static int vector_scale_pulp_open_cluster(const float *src, const float val, flo
 
     do {
         int idx1, idx2;
-        float src1, src2;
+        play_fmt_t src1, src2;
 
         idx1 = i;
         idx2 = i + 1;
@@ -56,7 +56,7 @@ static int vector_scale_pulp_open_cluster(const float *src, const float val, flo
 
 #else   /* CLUSTER */
 
-static int vector_scale_pulp_open_fc(const float *src, const float val, float *dst, const int len)
+static int vector_scale_pulp_open_fc(const play_fmt_t *src, const play_fmt_t val, play_fmt_t *dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src[i] * val;
@@ -66,7 +66,7 @@ static int vector_scale_pulp_open_fc(const float *src, const float val, float *d
 
 #endif  /* CLUSTER */
 
-int vector_scale_impl(const float *src, const float val, float *dst, const int len)
+int vector_scale_impl(const play_fmt_t *src, const play_fmt_t val, play_fmt_t *dst, const int len)
 {
     int ret;
 

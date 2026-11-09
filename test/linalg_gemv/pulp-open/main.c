@@ -7,12 +7,12 @@
 
 #include "pmsis.h"
 
-PI_L1 float beta;
-PI_L1 float alpha;
-PI_L1 float vec_x[DIM_N] __attribute__((aligned(4)));
-PI_L1 float vec_y[DIM_M] __attribute__((aligned(4)));
-PI_L1 float result[DIM_M] __attribute__((aligned(4)));
-PI_L1 float mat[DIM_M * DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t beta;
+PI_L1 play_fmt_t alpha;
+PI_L1 play_fmt_t vec_x[DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t vec_y[DIM_M] __attribute__((aligned(4)));
+PI_L1 play_fmt_t result[DIM_M] __attribute__((aligned(4)));
+PI_L1 play_fmt_t mat[DIM_M * DIM_N] __attribute__((aligned(4)));
 
 static void initialize_data()
 {

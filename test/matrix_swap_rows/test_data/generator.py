@@ -52,7 +52,7 @@ def generate_header_file(M, N, mat, expected, rowA, rowB, filename="data.h"):
 
     with open(filepath, "w") as f:
         f.write("#ifndef DATA_H_\n")
-        f.write("#define DATA_H_\n\n")
+        f.write("#define DATA_H_\n\n#include \"play.h\"\n\n")
 
         f.write(f"#define DIM_M {M}\n")
         f.write(f"#define DIM_N {N}\n\n")
@@ -61,8 +61,8 @@ def generate_header_file(M, N, mat, expected, rowA, rowB, filename="data.h"):
 
         f.write(f"int rowA = {rowA};\n")
         f.write(f"int rowB = {rowB};\n")
-        f.write(f"float mat[] = {format_matrix(mat)};\n")
-        f.write(f"float expected[] = {format_matrix(expected)};\n\n")
+        f.write(f"play_fmt_t mat[] = {format_matrix(mat)};\n")
+        f.write(f"play_fmt_t expected[] = {format_matrix(expected)};\n\n")
 
         f.write("#elif TARGET_IS_PULP_OPEN\n\n")
 
@@ -70,8 +70,8 @@ def generate_header_file(M, N, mat, expected, rowA, rowB, filename="data.h"):
 
         f.write(f"PI_L2 int rowA = {rowA};\n")
         f.write(f"PI_L2 int rowB = {rowB};\n")
-        f.write(f"PI_L2 float mat[] = {format_matrix(mat)};\n")
-        f.write(f"PI_L2 float expected[] = {format_matrix(expected)};\n\n")
+        f.write(f"PI_L2 play_fmt_t mat[] = {format_matrix(mat)};\n")
+        f.write(f"PI_L2 play_fmt_t expected[] = {format_matrix(expected)};\n\n")
 
         f.write("#endif /* TARGET_IS_ */\n\n")
 

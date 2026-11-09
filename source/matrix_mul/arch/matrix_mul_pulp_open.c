@@ -5,15 +5,15 @@
 
 #ifdef  CLUSTER
 
-static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int row_start;
     int row_end;
     int m, n, p;
     int num_ops;
     int rem_ops;
-    float sum1;
-    float sum2;
+    play_fmt_t sum1;
+    play_fmt_t sum2;
     int block;
     int left;
     int id;
@@ -34,8 +34,8 @@ static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, 
             sum2 = 0;
             n = 0;
             do {
-                float src_a1, src_a2;
-                float src_b1, src_b2;
+                play_fmt_t src_a1, src_a2;
+                play_fmt_t src_b1, src_b2;
 
                 src_a1 = src_a[m * dim_N + n];
                 src_a2 = src_a[m * dim_N + (n + 1)];
@@ -61,8 +61,8 @@ static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, 
         do {
             p = 0;
             do {
-                float a;
-                float b;
+                play_fmt_t a;
+                play_fmt_t b;
 
                 a = src_a[m * dim_N + (dim_N - 1)];
                 b = src_b[(dim_N - 1) * dim_P + p];
@@ -83,9 +83,9 @@ static int matrix_mul_pulp_open_cluster(const float *src_a, const float *src_b, 
 
 #else   /* CLUSTER */
 
-static int matrix_mul_pulp_open_fc(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
-    float sum;
+    play_fmt_t sum;
 
     for (int m = 0; m < dim_M; m++) {
         for (int p = 0; p < dim_P; p++) {
@@ -102,7 +102,7 @@ static int matrix_mul_pulp_open_fc(const float *src_a, const float *src_b, float
 #endif  /* CLUSTER */
 
 
-int matrix_mul_impl(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+int matrix_mul_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int ret;
 

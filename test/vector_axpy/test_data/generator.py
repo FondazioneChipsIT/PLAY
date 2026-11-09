@@ -46,25 +46,25 @@ def generate_header_file(length, vec_a, vec_b, alpha, expected, filename="data.h
 
     with open(filepath, "w") as f:
         f.write("#ifndef DATA_H_\n")
-        f.write("#define DATA_H_\n\n")
+        f.write("#define DATA_H_\n\n#include \"play.h\"\n\n")
 
         f.write(f"#define LEN {length}\n\n")
 
         f.write("#if TARGET_IS_SPATZ\n\n")
 
-        f.write(f"float vec_a[] = {format_array(vec_a)};\n")
-        f.write(f"float vec_b[] = {format_array(vec_b)};\n")
-        f.write(f"float scalar = {format_float(alpha)};\n")
-        f.write(f"float expected[] = {format_array(expected)};\n\n")
+        f.write(f"play_fmt_t vec_a[] = {format_array(vec_a)};\n")
+        f.write(f"play_fmt_t vec_b[] = {format_array(vec_b)};\n")
+        f.write(f"play_fmt_t scalar = {format_float(alpha)};\n")
+        f.write(f"play_fmt_t expected[] = {format_array(expected)};\n\n")
 
         f.write("#elif TARGET_IS_PULP_OPEN\n\n")
 
         f.write('#include "pmsis.h"\n\n')
 
-        f.write(f"PI_L2 float vec_a[] = {format_array(vec_a)};\n")
-        f.write(f"PI_L2 float vec_b[] = {format_array(vec_b)};\n")
-        f.write(f"PI_L2 float scalar = {format_float(alpha)};\n")
-        f.write(f"PI_L2 float expected[] = {format_array(expected)};\n\n")
+        f.write(f"PI_L2 play_fmt_t vec_a[] = {format_array(vec_a)};\n")
+        f.write(f"PI_L2 play_fmt_t vec_b[] = {format_array(vec_b)};\n")
+        f.write(f"PI_L2 play_fmt_t scalar = {format_float(alpha)};\n")
+        f.write(f"PI_L2 play_fmt_t expected[] = {format_array(expected)};\n\n")
 
         f.write("#endif /* TARGET_IS_ */\n\n")
 

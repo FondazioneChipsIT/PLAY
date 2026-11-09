@@ -5,18 +5,18 @@
 
 #ifdef  CLUSTER
 
-static PI_L1 float ONE_f = 1;
-static PI_L1 float EPSILON = 1e-12;
+static PI_L1 play_fmt_t ONE_f = 1;
+static PI_L1 play_fmt_t EPSILON = 1e-12;
 
-static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, float *vec_S, float *dst, const int dim_M, const int dim_N)
+static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int tot_ops_M;
     int rem_ops_M;
     int tot_ops_N;
     int rem_ops_N;
     int k, m, n;
-    float sum1;
-    float sum2;
+    play_fmt_t sum1;
+    play_fmt_t sum2;
     int block;
     int start;
     int left;
@@ -37,7 +37,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
 
     k = start;
     do {
-        float s, s_inv;
+        play_fmt_t s, s_inv;
         s = vec_S[k];
 
         if (s < EPSILON) {
@@ -67,8 +67,8 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
             n = 0;
             op = 0;
             do {
-                float src1, src2;
-                float v1, v2;
+                play_fmt_t src1, src2;
+                play_fmt_t v1, v2;
 
                 src1 = src[m * dim_N + n];
                 src2 = src[m * dim_N + (n + 1)];
@@ -102,12 +102,12 @@ static int linalg_svd_lsv_pulp_open_cluster(const float *src, float *mat_V, floa
 #else   /* CLUSTER */
 
 /* these variable needs to be re-defined for FC since it does not have access to L1 memory */
-static float ONE_f = 1;
-static float EPSILON = 1e-12;
+static play_fmt_t ONE_f = 1;
+static play_fmt_t EPSILON = 1e-12;
 
-int linalg_svd_lsv_pulp_open_fc(const float *src, float *mat_V, float *vec_S, float *dst, const int dim_M, const int dim_N)
+int linalg_svd_lsv_pulp_open_fc(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
-    float sum;
+    play_fmt_t sum;
 
     for (int k = 0; k < dim_N; k++) {
         /* Optimization */
@@ -130,7 +130,7 @@ int linalg_svd_lsv_pulp_open_fc(const float *src, float *mat_V, float *vec_S, fl
 
 #endif  /* CLUSTER */
 
-int linalg_svd_lsv_impl(const float *src, float *mat_V, float *vec_S, float *dst, const int dim_M, const int dim_N)
+int linalg_svd_lsv_impl(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int ret;
 

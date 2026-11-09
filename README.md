@@ -8,6 +8,7 @@ A collection of linear algebra kernels optimized for PULP-based architectures. T
 - [Repository Structure](#repository-structure)
     - [Directory Layout](#directory-layout)
     - [Multi Architecture Strategy](#multi-architecture-strategy)
+    - [Data Formats](#data-formats)
 
 - [Test](#test)
     - [Environment Setup](#environment-setup)
@@ -44,6 +45,17 @@ For each kernel:
     -  Dispatcher files (`source/<kernel>/<kernel>.c`) and arch implementations (`source/<kernel>/arch/<kernel>_<arch>.c`) include this centralized header.
 
 This means the public API and the test-level code do not need to know architecture internals; the build picks the correct arch implementation which provides the unified symbol. The user just call the API he is interested in, exposed and documented in the single header file  `play.h`.
+
+### Data Formats
+The kernels are written once on the `play_fmt_t` type, which `play.h` defines according to the `PLAY_FORMAT` macro selected at build time (`-DPLAY_FORMAT=<value>`):
+
+| `PLAY_FORMAT` | `play_fmt_t` | Requirements |
+|---|---|---|
+| `PLAY_FMT_FP32` (default) | `float` | none |
+| `PLAY_FMT_FP16` | `_Float16` | clang; `Zhinx` for the scalar operations, `Xcvhv` for the packed-SIMD ones |
+| `PLAY_FMT_BF16` | `__bf16` | clang; `Xcvbf` for the scalar operations, `Xcvbfv` for the packed-SIMD ones |
+
+With the default format the library is the plain `float` library it has always been. The narrow formats are supported on Pulp Open only: the Spatz kernels are written in assembly on 32-bit lanes and a format change would be a rewrite, not a retype. The `-march` carrying the required extensions is part of the toolchain environment, not of PLAY. The few math functions used by the kernels (`fabs`, `sqrt`) follow the format through `include/internal/fmt_math.h`, and the tests check the results against a tolerance made of an absolute and a relative term chosen per format (`TOLL_ABS` and `TOLL_REL` in `test/common/utils.h`, both overridable with `-D`).
 
 ## Test
 Each kernel has an associated test case in the test directory. Each test subfolder contains a dedicated folder for the source code and compilation files for each supported architecture, along with a shared folder containing the test input data and a Python script for generating them. Each architecture implements its own  `main.c`, which loads the source data, calls the kernel under test with this data, and compares the calculated result with the expected one.
@@ -117,6 +129,8 @@ For testing, several make flags are available:
 - Flags for `PULP_OPEN`
     - `USE_CLUSTER=1` — Run on the cluster (multi-core) instead of the fabric controller (default)
     - `NUM_CORES=<n>` — Number of cluster cores when `USE_CLUSTER=1` (default `NUM_CORES=1`, max value `NUM_CORES=8`)
+    - `FORMAT=<format>` — Data format of the kernels and of the test data: `FP32` (default), `FP16` or `BF16` (see [Data Formats](#data-formats); the narrow formats need a clang toolchain whose `-march` carries the matching extensions)
+    - `VECTORIZE=1` — Enable the packed-SIMD autovectorizer of the narrow formats (`-mno-strict-align -mllvm -riscv-xcvhv-vectorize`, clang only)
 
 - Flags for `SPATZ`
     - `NUM_CC=<n>` - Number of Core-Complexes in Cluster (default `NUM_CC=1`, max value `NUM_CC=2`)
@@ -159,6 +173,7 @@ To use **PLAY**  as a library in your project, follow these steps:
 3.  **Compilation & Linking**: Compile and link the library by adding:
     * The top-level implementation files: `source/*/*.c`
     * The architecture-specific implementation file(s) for your target: `source/<kernel>/arch/<kernel>_$(ARCH_SUFFIX).c` (e.g., `source/<kernel>/arch/<kernel>_pulp_open.c`).
+4.  **Data Format** (optional): add `-DPLAY_FORMAT=PLAY_FMT_FP16` or `-DPLAY_FORMAT=PLAY_FMT_BF16` to the compile flags of both the library and your code to work on half-precision data (see [Data Formats](#data-formats)). Without it the library works on `float`.
 
 The single `play.h` header simplifies adoption: it exposes the public API while the build system selects and compiles the correct backend implementation for the chosen architecture.
 

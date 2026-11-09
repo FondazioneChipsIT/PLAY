@@ -7,8 +7,8 @@
 
 #include "pmsis.h"
 
-PI_L1 float src[DIM_M * DIM_N] __attribute__((aligned(4)));
-PI_L1 float val;
+PI_L1 play_fmt_t src[DIM_M * DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t val;
 
 static void initialize_matrices()
 {

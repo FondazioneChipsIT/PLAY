@@ -3,7 +3,34 @@
 
 #include <stdbool.h>
 
-#define TOLL 0.004f
+#include "play_fmt.h"
+
+/*
+ * Tolerance of the comparisons: two values match when
+ *     |val_a - val_b| <= TOLL_ABS + TOLL_REL * |val_b|
+ * FP32 keeps the historical absolute tolerance. Both macros can be
+ * overridden from the command line (-DTOLL_ABS=... -DTOLL_REL=...).
+ */
+#if PLAY_FORMAT == PLAY_FMT_FP16
+#define TOLL_ABS_DEFAULT 0.004f
+#define TOLL_REL_DEFAULT 0.004f     /* 2^-8, 4 ulp of the 10-bit mantissa */
+#elif PLAY_FORMAT == PLAY_FMT_BF16
+#define TOLL_ABS_DEFAULT 0.03f
+#define TOLL_REL_DEFAULT 0.03f      /* 2^-5, 4 ulp of the 7-bit mantissa */
+#else   /* PLAY_FMT_FP32 */
+#define TOLL_ABS_DEFAULT 0.004f
+#define TOLL_REL_DEFAULT 0.0f
+#endif  /* PLAY_FORMAT */
+
+#ifndef TOLL_ABS
+#define TOLL_ABS TOLL_ABS_DEFAULT
+#endif  /* TOLL_ABS */
+
+#ifndef TOLL_REL
+#define TOLL_REL TOLL_REL_DEFAULT
+#endif  /* TOLL_REL */
+
+#define TOLL TOLL_ABS
 
 /**
  * @brief Allocates a memory buffer in L1 memory and returns its address.
@@ -37,41 +64,41 @@ bool is_master_core();
 /**
  * @brief Compares two floating-point values with a tollerance check
  *
- * @param[in] val_a First float value
- * @param[in] val_b Second float value
+ * @param[in] val_a First value
+ * @param[in] val_b Second value
  *
- * @return true if all elements differ by less than TOLL
- * @return false if any element difference exceeds TOLL
+ * @return true if the values differ within the tolerance (TOLL_ABS, TOLL_REL)
+ * @return false if the difference exceeds the tolerance
  */
-bool scalar_compare(const float val_a, const float val_b);
+bool scalar_compare(const play_fmt_t val_a, const play_fmt_t val_b);
 
 /**
  * @brief Compares two floating-point vectors with a tolerance check
  *
- * @param[in] vec_a Pointer to the first float vector
- * @param[in] vec_b Pointer to the second float vector
+ * @param[in] vec_a Pointer to the first vector
+ * @param[in] vec_b Pointer to the second vector
  * @param[in] len Length of the vectors to compare
  *
- * @return true if all elements differ by less than TOLL
- * @return false if any element difference exceeds TOLL
+ * @return true if all elements differ within the tolerance (TOLL_ABS, TOLL_REL)
+ * @return false if any element difference exceeds the tolerance
  *
  * @warning Both vectors must have at least 'len' elements allocated
  */
-bool vector_compare(const float *vec_a, const float *vec_b, const int len);
+bool vector_compare(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const int len);
 
 /**
  * @brief Compares the absolute values of two floating-point vectors with a tolerance check
  *
- * @param[in] vec_a Pointer to the first float vector
- * @param[in] vec_b Pointer to the second float vector
+ * @param[in] vec_a Pointer to the first vector
+ * @param[in] vec_b Pointer to the second vector
  * @param[in] len Length of the vectors to compare
  *
- * @return true if all elements differ by less than TOLL
- * @return false if any element difference exceeds TOLL
+ * @return true if all elements differ within the tolerance (TOLL_ABS, TOLL_REL)
+ * @return false if any element difference exceeds the tolerance
  *
  * @warning Both vectors must have at least 'len' elements allocated
  */
-bool vector_compare_abs(const float *vec_a, const float *vec_b, const int len);
+bool vector_compare_abs(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const int len);
 
 /**
  * @brief Compares two floating-point matrices with a tollerance check
@@ -82,10 +109,10 @@ bool vector_compare_abs(const float *vec_a, const float *vec_b, const int len);
  * @param[in] cols Number of columts for the two matrices
  *
  *
- * @return true if all elements differ by less than TOLL
- * @return false if any alement difference exceeds TOLL
+ * @return true if all elements differ within the tolerance (TOLL_ABS, TOLL_REL)
+ * @return false if any element difference exceeds the tolerance
  */
-bool matrix_compare(const float *mat_a, const float *mat_b, const int rows, const int cols);
+bool matrix_compare(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const int rows, const int cols);
 
 /**
  * @brief Compares the absolute value of two floating-point matrices with a tollerance check
@@ -96,40 +123,40 @@ bool matrix_compare(const float *mat_a, const float *mat_b, const int rows, cons
  * @param[in] cols Number of columts for the two matrices
  *
  *
- * @return true if all elements differ by less than TOLL
- * @return false if any alement difference exceeds TOLL
+ * @return true if all elements differ within the tolerance (TOLL_ABS, TOLL_REL)
+ * @return false if any element difference exceeds the tolerance
  */
-bool matrix_compare_abs(const float *mat_a, const float *mat_b, const int rows, const int cols);
+bool matrix_compare_abs(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const int rows, const int cols);
 
 #ifdef  PRINT_DATA
 
 /**
- * @brief Prints a scalar float value to standard output
+ * @brief Prints a scalar value to standard output
  *
- * @param[in] val The float scalar to print
+ * @param[in] val The scalar to print
  * @param[in] str Descriptive string to identify the scalar in output
  *
  * @note This function only produces output when PRINT_DATA macro is defined.
  * In other configurations, this function has no effect.
  */
-void scalar_print(const float val, const char *str);
+void scalar_print(const play_fmt_t val, const char *str);
 
 /**
  * @brief Prints a vector to standard output
  *
- * @param[in] vec Pointer to the float vector to print
+ * @param[in] vec Pointer to the vector to print
  * @param[in] len Length of the vector
  * @param[in] str Descriptive string to identify the vector in output
  *
  * @note This function only produces output when PRINT_DATA macro is defined.
  * In other configurations, this function has no effect.
  */
-void vector_print(const float *vec, const int len, const char *str);
+void vector_print(const play_fmt_t *vec, const int len, const char *str);
 
 /**
  * @brief Printa a matrix to standard output
  *
- * @param[in] mat Pointer to the float matrix to print
+ * @param[in] mat Pointer to the matrix to print
  * @param[in] rows Number of rows of the matrix
  * @param[in] cols Number of cols of the matrix
  * @param[in] str Descriptive string to identify the matrix in output
@@ -137,7 +164,7 @@ void vector_print(const float *vec, const int len, const char *str);
  * @note This function only produces output when PRINT_DATA macro is defined.
  * In other configurations, this function has no effect.
  */
-void matrix_print(const float *mat, const int rows, const int cols, const char *str);
+void matrix_print(const play_fmt_t *mat, const int rows, const int cols, const char *str);
 
 #endif  /* PRINT_DATA */
 

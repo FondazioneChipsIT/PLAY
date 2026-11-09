@@ -8,13 +8,13 @@
 
 #include "pmsis.h"
 
-PI_L1 float src[DIM_M * DIM_N]  __attribute__((aligned(4)));
-PI_L1 float mat_V[DIM_N * DIM_N]  __attribute__((aligned(4)));
-PI_L1 float vec_S[DIM_N] __attribute__((aligned(4)));
-PI_L1 float result[DIM_M * DIM_N]  __attribute__((aligned(4)));
+PI_L1 play_fmt_t src[DIM_M * DIM_N]  __attribute__((aligned(4)));
+PI_L1 play_fmt_t mat_V[DIM_N * DIM_N]  __attribute__((aligned(4)));
+PI_L1 play_fmt_t vec_S[DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t result[DIM_M * DIM_N]  __attribute__((aligned(4)));
 
-static void sort_results_descending(float *result, float *mat_V, float *vec_S, const int dim_M, const int dim_N) {
-    float tmp;
+static void sort_results_descending(play_fmt_t *result, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M, const int dim_N) {
+    play_fmt_t tmp;
     int max_idx;
 
     if (!is_master_core())

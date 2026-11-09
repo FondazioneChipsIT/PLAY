@@ -7,10 +7,10 @@
 
 #include "pmsis.h"
 
-PI_L1 float mat[DIM_M * DIM_M] __attribute__((aligned(4)));
-PI_L1 float vec[DIM_M] __attribute__((aligned(4)));
+PI_L1 play_fmt_t mat[DIM_M * DIM_M] __attribute__((aligned(4)));
+PI_L1 play_fmt_t vec[DIM_M] __attribute__((aligned(4)));
 PI_L1 int perm[DIM_M] __attribute__((aligned(4)));
-PI_L1 float result[DIM_M] __attribute__((aligned(4)));
+PI_L1 play_fmt_t result[DIM_M] __attribute__((aligned(4)));
 
 static void initialize_data()
 {
@@ -40,7 +40,7 @@ static void check_result()
 
 #ifdef  PRINT_DATA
     matrix_print(mat, DIM_M, DIM_M, "mat");
-    vector_print((float *)perm, DIM_M, "perm");
+    vector_print((play_fmt_t *)perm, DIM_M, "perm");
     vector_print(vec, DIM_M, "vec");
     vector_print(result, DIM_M, "result");
     vector_print(expected, DIM_M, "expected");

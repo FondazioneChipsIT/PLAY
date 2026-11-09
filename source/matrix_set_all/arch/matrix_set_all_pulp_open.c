@@ -5,7 +5,7 @@
 
 #ifdef  CLUSTER
 
-static int matrix_set_all_pulp_open_cluster(float *mat, const float val, const int dim_M, const int dim_N)
+static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
@@ -56,7 +56,7 @@ static int matrix_set_all_pulp_open_cluster(float *mat, const float val, const i
 
 #else   /* CLUSTER */
 
-static int matrix_set_all_pulp_open_fc(float *mat, const float val, const int dim_M, const int dim_N)
+static int matrix_set_all_pulp_open_fc(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     for (int m = 0; m < dim_M; m++)
         for (int n = 0; n < dim_N; n++)
@@ -67,7 +67,7 @@ static int matrix_set_all_pulp_open_fc(float *mat, const float val, const int di
 
 #endif  /* CLUSTER */
 
-int matrix_set_all_impl(float *mat, const float val, const int dim_M, const int dim_N)
+int matrix_set_all_impl(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     int ret;
 

@@ -42,37 +42,43 @@ bool is_master_core()
 #endif  /* TARGET_IS_ */
 }
 
-bool scalar_compare(const float val_a, const float val_b)
+bool scalar_compare(const play_fmt_t val_a, const play_fmt_t val_b)
 {
     float abs_diff;
+    float toll;
 
-    abs_diff = fabs(val_a - val_b);
-    if (abs_diff > TOLL)
+    abs_diff = fabsf((float) val_a - (float) val_b);
+    toll = TOLL_ABS + TOLL_REL * fabsf((float) val_b);
+    if (abs_diff > toll)
         return false;
 
     return true;
 }
 
-bool vector_compare(const float *vec_a, const float *vec_b, const int len)
+bool vector_compare(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const int len)
 {
     float abs_diff;
+    float toll;
 
     for (int i = 0; i < len; i++) {
-        abs_diff = fabs(vec_a[i] - vec_b[i]);
-        if (abs_diff > TOLL)
+        abs_diff = fabsf((float) vec_a[i] - (float) vec_b[i]);
+        toll = TOLL_ABS + TOLL_REL * fabsf((float) vec_b[i]);
+        if (abs_diff > toll)
             return false;
     }
 
     return true;
 }
 
-bool vector_compare_abs(const float *vec_a, const float *vec_b, const int len)
+bool vector_compare_abs(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const int len)
 {
     float abs_diff;
+    float toll;
 
     for (int i = 0; i < len; i++) {
-        abs_diff = fabs(fabs(vec_a[i]) - fabs(vec_b[i]));
-        if (abs_diff > TOLL) {
+        abs_diff = fabsf(fabsf((float) vec_a[i]) - fabsf((float) vec_b[i]));
+        toll = TOLL_ABS + TOLL_REL * fabsf((float) vec_b[i]);
+        if (abs_diff > toll) {
             printf("abs_diff = %f\n", abs_diff);
             return false;
         }
@@ -81,14 +87,16 @@ bool vector_compare_abs(const float *vec_a, const float *vec_b, const int len)
     return true;
 }
 
-bool matrix_compare(const float *mat_a, const float *mat_b, const int rows, const int cols)
+bool matrix_compare(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const int rows, const int cols)
 {
     float abs_diff;
+    float toll;
 
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
-            abs_diff = fabs(mat_a[r * cols + c] - mat_b[r * cols + c]);
-            if (abs_diff > TOLL)
+            abs_diff = fabsf((float) mat_a[r * cols + c] - (float) mat_b[r * cols + c]);
+            toll = TOLL_ABS + TOLL_REL * fabsf((float) mat_b[r * cols + c]);
+            if (abs_diff > toll)
                 return false;
         }
     }
@@ -96,14 +104,16 @@ bool matrix_compare(const float *mat_a, const float *mat_b, const int rows, cons
     return true;
 }
 
-bool matrix_compare_abs(const float *mat_a, const float *mat_b, const int rows, const int cols)
+bool matrix_compare_abs(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const int rows, const int cols)
 {
     float abs_diff;
+    float toll;
 
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
-            abs_diff = fabs(fabs(mat_a[r * cols + c]) - fabs(mat_b[r * cols + c]));
-            if (abs_diff > TOLL) {
+            abs_diff = fabsf(fabsf((float) mat_a[r * cols + c]) - fabsf((float) mat_b[r * cols + c]));
+            toll = TOLL_ABS + TOLL_REL * fabsf((float) mat_b[r * cols + c]);
+            if (abs_diff > toll) {
                 printf("abs_diff = %f\n", abs_diff);
                 return false;
             }
@@ -115,27 +125,27 @@ bool matrix_compare_abs(const float *mat_a, const float *mat_b, const int rows, 
 
 #ifdef  PRINT_DATA
 
-void scalar_print(const float val, const char *str)
+void scalar_print(const play_fmt_t val, const char *str)
 {
-    printf("Scalar %s\t= %.4f\n", str, val);
+    printf("Scalar %s\t= %.4f\n", str, (float) val);
 }
 
-void vector_print(const float *vec, const int len, const char *str)
+void vector_print(const play_fmt_t *vec, const int len, const char *str)
 {
     printf("Vector %s\t= [ ", str);
     for (int i = 0; i < (len - 1); i++)
-        printf("%.4f, ", vec[i]);
-    printf("%.4f ]\n", vec[len - 1]);
+        printf("%.4f, ", (float) vec[i]);
+    printf("%.4f ]\n", (float) vec[len - 1]);
 }
 
-void matrix_print(const float *mat, const int rows, const int cols, const char *str)
+void matrix_print(const play_fmt_t *mat, const int rows, const int cols, const char *str)
 {
     printf("Matrix %s:\n", str);
     printf("[\n");
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < (cols - 1); c++)
-            printf("%.4f,  ", mat[r * cols + c]);
-        printf("%.4f;\n", mat[r * cols + (cols - 1)]);
+            printf("%.4f,  ", (float) mat[r * cols + c]);
+        printf("%.4f;\n", (float) mat[r * cols + (cols - 1)]);
     }
     printf("]\n");
 }

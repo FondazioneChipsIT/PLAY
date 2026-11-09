@@ -42,7 +42,7 @@ def generate_header_file(M, N, P, mat_a, mat_b, expected, filename="data.h"):
 
     with open(filepath, "w") as f:
         f.write("#ifndef DATA_H_\n")
-        f.write("#define DATA_H_\n\n")
+        f.write("#define DATA_H_\n\n#include \"play.h\"\n\n")
 
         f.write(f"#define DIM_M {M}\n")
         f.write(f"#define DIM_N {N}\n")
@@ -50,17 +50,17 @@ def generate_header_file(M, N, P, mat_a, mat_b, expected, filename="data.h"):
 
         f.write("#if TARGET_IS_SPATZ\n\n")
 
-        f.write(f"float mat_a[] = {format_matrix(mat_a)};\n")
-        f.write(f"float mat_b[] = {format_matrix(mat_b)};\n")
-        f.write(f"float expected[] = {format_matrix(expected)};\n\n")
+        f.write(f"play_fmt_t mat_a[] = {format_matrix(mat_a)};\n")
+        f.write(f"play_fmt_t mat_b[] = {format_matrix(mat_b)};\n")
+        f.write(f"play_fmt_t expected[] = {format_matrix(expected)};\n\n")
 
         f.write("#elif TARGET_IS_PULP_OPEN\n\n")
 
         f.write('#include "pmsis.h"\n\n')
 
-        f.write(f"PI_L2 float mat_a[] = {format_matrix(mat_a)};\n")
-        f.write(f"PI_L2 float mat_b[] = {format_matrix(mat_b)};\n")
-        f.write(f"PI_L2 float expected[] = {format_matrix(expected)};\n\n")
+        f.write(f"PI_L2 play_fmt_t mat_a[] = {format_matrix(mat_a)};\n")
+        f.write(f"PI_L2 play_fmt_t mat_b[] = {format_matrix(mat_b)};\n")
+        f.write(f"PI_L2 play_fmt_t expected[] = {format_matrix(expected)};\n\n")
 
         f.write("#endif /* TARGET_IS_ */\n\n")
 

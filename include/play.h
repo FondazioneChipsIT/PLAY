@@ -1,6 +1,8 @@
 #ifndef PLAY_H_
 #define PLAY_H_
 
+#include "play_fmt.h"
+
 /**
  * @brief Prints hello world message
  *
@@ -14,14 +16,14 @@ int hello_world();
  * This function computes the element-wise product of two floating-point vectors (`src_a` and `src_b`)
  * and stores the result in the `dst` vector.
  *
- * @param [in] src_a A pointer to the first source float vector.
- * @param [in] src_b A pointer to the second source float vector.
+ * @param [in] src_a A pointer to the first source vector.
+ * @param [in] src_b A pointer to the second source vector.
  * @param [out] dst A pointer to the destination vector where the results will be stored.
  * @param [in] len The length of the vectors. All three vectors are assumed to have the same length.
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_mul(const float *src_a, const float *src_b, float *dst, const int len);
+int vector_mul(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len);
 
 /**
  * @brief Performs element-wise subtraction of two vectors.
@@ -29,14 +31,14 @@ int vector_mul(const float *src_a, const float *src_b, float *dst, const int len
  * This function computes the element-wise subtraction of two floating-point vectors(`src_a` and `src_b`)
  * and stores the result in the `dst` vector.
  *
- * @param [in] src_a A pointer to the first source float vector.
- * @param [in] src_b A pointer to the second source float vector.
+ * @param [in] src_a A pointer to the first source vector.
+ * @param [in] src_b A pointer to the second source vector.
  * @param [out] dst A pointer to the destination vector where the results will be stored.
  * @param [in] len The length of the vectors. All three vectors are assumed to have the same length.
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_sub(const float *src_a, const float *src_b, float *dst, const int len);
+int vector_sub(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len);
 
 /**
  * @brief Performs element-wise addition of two vectors.
@@ -44,14 +46,14 @@ int vector_sub(const float *src_a, const float *src_b, float *dst, const int len
  * This function computes the element-wise addition of two floating-point vectors(`src_a` and `src_b`)
  * and stores the result in the `dst` vector.
  *
- * @param [in] src_a A pointer to the first source float vector.
- * @param [in] src_b A pointer to the second source float vector.
+ * @param [in] src_a A pointer to the first source vector.
+ * @param [in] src_b A pointer to the second source vector.
  * @param [out] dst A pointer to the destination vector where the results will be stored.
  * @param [in] len The length of the vectors. All three vectors are assumed to have the same length.
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_add(const float *src_a, const float *src_b, float *dst, const int len);
+int vector_add(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len);
 
 /**
  * @brief Adds a scalar offset to each element of a vector.
@@ -66,7 +68,7 @@ int vector_add(const float *src_a, const float *src_b, float *dst, const int len
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_offset(const float *src, const float offset, float *dst, const int len);
+int vector_offset(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len);
 
 /**
  * @brief Performs element-wise scaling of a vector.
@@ -81,7 +83,7 @@ int vector_offset(const float *src, const float offset, float *dst, const int le
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_scale(const float *src, const float val, float *dst, const int len);
+int vector_scale(const play_fmt_t *src, const play_fmt_t val, play_fmt_t *dst, const int len);
 
 /**
  * @brief Finds the minimum value in a vector.
@@ -95,7 +97,7 @@ int vector_scale(const float *src, const float val, float *dst, const int len);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_min(const float *src, float *min, const int len);
+int vector_min(const play_fmt_t *src, play_fmt_t *min, const int len);
 
 /**
  * @brief Computes the dot product of two vectors.
@@ -111,7 +113,7 @@ int vector_min(const float *src, float *min, const int len);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_dot(const float *src_a, const float *src_b, float *dst, const int len);
+int vector_dot(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len);
 
 /**
  * @brief Computes the AXPY operation: dst = α·src_a + src_b.
@@ -129,7 +131,7 @@ int vector_dot(const float *src_a, const float *src_b, float *dst, const int len
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_axpy(const float *src_a, const float *src_b, const float alpha, float *dst, const int len);
+int vector_axpy(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len);
 
 /**
  * @brief Copies elements from a source vector to a destination vector.
@@ -143,7 +145,7 @@ int vector_axpy(const float *src_a, const float *src_b, const float alpha, float
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_memcpy(const float *src, float *dst, const int len);
+int vector_memcpy(const play_fmt_t *src, play_fmt_t *dst, const int len);
 
 /**
  * @brief Fills a vector with a value.
@@ -157,7 +159,7 @@ int vector_memcpy(const float *src, float *dst, const int len);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int vector_set_all(float *vec, const float val, const int len);
+int vector_set_all(play_fmt_t *vec, const play_fmt_t val, const int len);
 
 /**
  * @brief Performs matrix multiplication: dst = src_a * src_b.
@@ -175,7 +177,7 @@ int vector_set_all(float *vec, const float val, const int len);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_mul(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P);
+int matrix_mul(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P);
 
 /**
  * @brief Performs matrix transposition.
@@ -191,7 +193,7 @@ int matrix_mul(const float *src_a, const float *src_b, float *dst, const int dim
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_trans(const float *src, float *dst, const int dim_M, const int dim_N);
+int matrix_trans(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N);
 
 /**
  * @brief Performs matrix multiplication with a transposed first matrix: dst = src_a^T * src_b
@@ -205,7 +207,7 @@ int matrix_trans(const float *src, float *dst, const int dim_M, const int dim_N)
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_mul_trans_A(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P);
+int matrix_mul_trans_A(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P);
 
 /**
  * @brief Performs matrix multiplication with a transposed second matrix: dst = src_a * src_b^T.
@@ -222,7 +224,7 @@ int matrix_mul_trans_A(const float *src_a, const float *src_b, float *dst, const
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_mul_trans_B(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P);
+int matrix_mul_trans_B(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P);
 
 /**
  * @brief Copies elements from a source matrix to a destination matrix.
@@ -238,7 +240,7 @@ int matrix_mul_trans_B(const float *src_a, const float *src_b, float *dst, const
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_memcpy(const float *src, float *dst, const int dim_M, const int dim_N);
+int matrix_memcpy(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N);
 
 /**
  * @brief Fills a matrix with a constant value.
@@ -254,7 +256,7 @@ int matrix_memcpy(const float *src, float *dst, const int dim_M, const int dim_N
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_set_all(float *mat, const float val, const int dim_M, const int dim_N);
+int matrix_set_all(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N);
 
 /**
  * @brief Swaps two rows of a matrix.
@@ -269,7 +271,7 @@ int matrix_set_all(float *mat, const float val, const int dim_M, const int dim_N
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int matrix_swap_rows(float *mat, const int row_a, const int row_b, const int dim_N);
+int matrix_swap_rows(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N);
 
 /**
  * @brief Performs a generalized matrix-vector multiplication and addition: dst = α·mat·vec_x + β·vec_y.
@@ -288,7 +290,7 @@ int matrix_swap_rows(float *mat, const int row_a, const int row_b, const int dim
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_gemv(const float *mat, const float *vec_x, const float *vec_y, const float alpha, const float beta, float *dst, const int dim_M, const int dim_N);
+int linalg_gemv(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N);
 
 /**
  * @brief Performs a transposed general matrix-vector multiplication and addition: dst = α·matᵀ·vec_x + β·vec_y.
@@ -304,7 +306,7 @@ int linalg_gemv(const float *mat, const float *vec_x, const float *vec_y, const 
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_gemv_trans(const float *mat, const float *vec_x, const float *vec_y, const float alpha, const float beta, float *dst, const int dim_M, const int dim_N);
+int linalg_gemv_trans(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N);
 
 /**
  * @brief Performs LU decomposition.
@@ -319,7 +321,7 @@ int linalg_gemv_trans(const float *mat, const float *vec_x, const float *vec_y, 
  *
  * @return int Returns 0 on success, or -1 if the matrix is singular and cannot be decomposed.
  */
-int linalg_lu_decomp(float *mat, int *perm, const int dim_M, const int dim_N);
+int linalg_lu_decomp(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N);
 
 /**
  * @brief Solves a linear system Ax = b using a precomputed LU factorization.
@@ -338,7 +340,7 @@ int linalg_lu_decomp(float *mat, int *perm, const int dim_M, const int dim_N);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_lu_solve(const float *mat, const float *vec, const int *perm, float *result, const int dim_M, const int dim_N);
+int linalg_lu_solve(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N);
 
 /**
  * @brief Computes the Singular Value Decomposition (SVD) of a symmetric matrix using the Jacobi algorithm.
@@ -354,7 +356,7 @@ int linalg_lu_solve(const float *mat, const float *vec, const int *perm, float *
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_svd_jacobi(float *mat, float *mat_V, float *vec_S, const int dim_M);
+int linalg_svd_jacobi(play_fmt_t *mat, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M);
 
 /**
  * @brief Computes left singular vectors U from A, V, and S
@@ -373,7 +375,7 @@ int linalg_svd_jacobi(float *mat, float *mat_V, float *vec_S, const int dim_M);
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_svd_lsv(const float *src, float *mat_V, float *vec_S, float *dst, const int dim_M, const int dim_N);
+int linalg_svd_lsv(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N);
 
 /**
  * @brief Computes Singular Value Decomposition (SVD) of a matrix
@@ -391,7 +393,7 @@ int linalg_svd_lsv(const float *src, float *mat_V, float *vec_S, float *dst, con
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_svd(const float *src, float *dst, float *mat_V, float *vec_S, const int dim_M, const int dim_N);
+int linalg_svd(const play_fmt_t *src, play_fmt_t *dst, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M, const int dim_N);
 
 /**
  * @brief Computes the Cholesky Decomposition of a symmetric positive definite matrix
@@ -406,6 +408,6 @@ int linalg_svd(const float *src, float *dst, float *mat_V, float *vec_S, const i
  *
  * @return int Returns 0 on success, non-zero on error.
  */
-int linalg_cholesky_decomp(const float *src, float *dst, const int dim);
+int linalg_cholesky_decomp(const play_fmt_t *src, play_fmt_t *dst, const int dim);
 
 #endif  /* PLAY_H_ */

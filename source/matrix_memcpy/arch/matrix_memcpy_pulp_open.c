@@ -5,7 +5,7 @@
 
 #ifdef  CLUSTER
 
-int matrix_memcpy_pulp_open_cluster(const float *src, float *dst, const int dim_M, const int dim_N)
+int matrix_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
@@ -31,7 +31,7 @@ int matrix_memcpy_pulp_open_cluster(const float *src, float *dst, const int dim_
         ops = 0;
         do {
             int idx1, idx2;
-            float src1, src2;
+            play_fmt_t src1, src2;
 
             idx1 = m * dim_N + n;
             idx2 = m * dim_N + (n + 1);
@@ -63,7 +63,7 @@ int matrix_memcpy_pulp_open_cluster(const float *src, float *dst, const int dim_
 
 #else   /* CLUSTER */
 
-static int matrix_memcpy_pulp_open_fc(const float *src, float *dst, const int dim_M, const int dim_N)
+static int matrix_memcpy_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     for (int m = 0; m < dim_M; m++)
         for (int n = 0; n < dim_N; n++)
@@ -74,7 +74,7 @@ static int matrix_memcpy_pulp_open_fc(const float *src, float *dst, const int di
 
 #endif  /* CLUSTER */
 
-int matrix_memcpy_impl(const float *src, float *dst, const int dim_M, const int dim_N)
+int matrix_memcpy_impl(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int ret;
 

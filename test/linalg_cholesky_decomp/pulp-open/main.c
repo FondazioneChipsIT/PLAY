@@ -8,8 +8,8 @@
 
 #include "pmsis.h"
 
-PI_L1 float src[DIM_M * DIM_M]  __attribute__((aligned(4)));
-PI_L1 float result[DIM_M * DIM_M] __attribute((aligned(4)));
+PI_L1 play_fmt_t src[DIM_M * DIM_M]  __attribute__((aligned(4)));
+PI_L1 play_fmt_t result[DIM_M * DIM_M] __attribute((aligned(4)));
 
 static void initialize_data()
 {

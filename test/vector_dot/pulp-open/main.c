@@ -7,9 +7,9 @@
 
 #include "pmsis.h"
 
-PI_L1 float src_a[LEN] __attribute__((aligned(4)));
-PI_L1 float src_b[LEN] __attribute__((aligned(4)));
-PI_L1 float result;
+PI_L1 play_fmt_t src_a[LEN] __attribute__((aligned(4)));
+PI_L1 play_fmt_t src_b[LEN] __attribute__((aligned(4)));
+PI_L1 play_fmt_t result;
 
 static void initialize_vectors()
 {

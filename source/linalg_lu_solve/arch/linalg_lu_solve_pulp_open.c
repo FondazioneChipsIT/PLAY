@@ -3,11 +3,11 @@
 
 #include "pmsis.h"
 
-PI_L1 float *y;
+PI_L1 play_fmt_t *y;
 
 #ifdef  CLUSTER
 
-PI_L1 float local_sum[NUM_CORES];
+PI_L1 play_fmt_t local_sum[NUM_CORES];
 
 static inline void barrier()
 {
@@ -16,12 +16,12 @@ static inline void barrier()
 #endif
 }
 
-int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const int *perm, float *result, const int dim_M, const int dim_N)
+int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
 {
     int perm_idx;
     int tot_ops;
     int rem_ops;
-    float sum;
+    play_fmt_t sum;
     int start;
     int block;
     int left;
@@ -32,7 +32,7 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
 
     id = pi_core_id();
     if (id == 0)
-        y = pmsis_l1_malloc(dim_M * sizeof(float));
+        y = pmsis_l1_malloc(dim_M * sizeof(play_fmt_t));
 
     barrier();
 
@@ -53,8 +53,8 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
 
         if (tot_ops != 0) {
             do {
-                float y1, y2;
-                float mat1, mat2;
+                play_fmt_t y1, y2;
+                play_fmt_t mat1, mat2;
 
                 y1 = y[k];
                 y2 = y[k + 1];
@@ -97,8 +97,8 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
 
         if (tot_ops != 0) {
             do {
-                float mat1, mat2;
-                float result1, result2;
+                play_fmt_t mat1, mat2;
+                play_fmt_t result1, result2;
 
                 result1 = result[k];
                 result2 = result[k + 1];
@@ -126,7 +126,7 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
     }
 
     if (id == 0)
-        pmsis_l1_malloc_free(y, dim_M * sizeof(float));
+        pmsis_l1_malloc_free(y, dim_M * sizeof(play_fmt_t));
 
     barrier();
 
@@ -135,12 +135,12 @@ int linalg_lu_solve_pulp_open_cluster(const float *mat, const float *vec, const 
 
 #else   /* CLUSTER */
 
-static int linalg_lu_solve_pulp_open_fc(const float *mat, const float *vec, const int *perm, float *result, const int dim_M, const int dim_N)
+static int linalg_lu_solve_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
 {
     int perm_idx;
-    float sum;
+    play_fmt_t sum;
 
-    y = pmsis_l1_malloc(dim_M * sizeof(float));
+    y = pmsis_l1_malloc(dim_M * sizeof(play_fmt_t));
 
     /* Forward substitution (L * y = perm * v) */
     for (int m = 0; m < dim_M; m++) {
@@ -166,7 +166,7 @@ static int linalg_lu_solve_pulp_open_fc(const float *mat, const float *vec, cons
 
 #endif  /* CLUSTER */
 
-int linalg_lu_solve_impl(const float *mat, const float *vec, const int *perm, float *result, const int dim_M, const int dim_N)
+int linalg_lu_solve_impl(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
 {
     int ret;
 

@@ -7,9 +7,9 @@
 
 #include "pmsis.h"
 
-PI_L1 float src_a[DIM_M * DIM_N] __attribute__((aligned(4)));
-PI_L1 float src_b[DIM_M * DIM_P] __attribute__((aligned(4)));
-PI_L1 float result[DIM_N * DIM_P] __attribute__((aligned(4)));
+PI_L1 play_fmt_t src_a[DIM_M * DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t src_b[DIM_M * DIM_P] __attribute__((aligned(4)));
+PI_L1 play_fmt_t result[DIM_N * DIM_P] __attribute__((aligned(4)));
 
 static void initialize_matrices()
 {

@@ -5,7 +5,7 @@
 
 #ifdef  CLUSTER
 
-static int vector_set_all_pulp_open_cluster(float *vec, const float val, const int len)
+static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t val, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -52,7 +52,7 @@ static int vector_set_all_pulp_open_cluster(float *vec, const float val, const i
 
 #else   /* CLUSTER */
 
-static int vector_set_all_pulp_open_fc(float *vec, const float val, const int len)
+static int vector_set_all_pulp_open_fc(play_fmt_t *vec, const play_fmt_t val, const int len)
 {
     for (int i = 0; i < len; i++)
         vec[i] = val;
@@ -62,7 +62,7 @@ static int vector_set_all_pulp_open_fc(float *vec, const float val, const int le
 
 #endif  /* CLUSTER */
 
-int vector_set_all_impl(float *vec, const float val, const int len)
+int vector_set_all_impl(play_fmt_t *vec, const play_fmt_t val, const int len)
 {
     int ret;
 

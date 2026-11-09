@@ -5,11 +5,11 @@
 
 #ifdef CLUSTER
 
-PI_L1 float local_min[NUM_CORES];
+PI_L1 play_fmt_t local_min[NUM_CORES];
 
-static int vector_min_pulp_open_cluster(const float *src, float *min, const int len)
+static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
 {
-    float min_tmp;
+    play_fmt_t min_tmp;
     int block;
     int start;
     int left;
@@ -26,7 +26,7 @@ static int vector_min_pulp_open_cluster(const float *src, float *min, const int 
 
     for (i = (start + 1); (i + 3) < end; i += 4) {
         int idx1, idx2, idx3, idx4;
-        float src1, src2, src3, src4;
+        play_fmt_t src1, src2, src3, src4;
 
         idx1 = i;
         idx2 = i + 1;
@@ -77,7 +77,7 @@ exit:
 
 #else   /* CLUSTER */
 
-static int vector_min_pulp_open_fc(const float *src, float *min, const int len)
+static int vector_min_pulp_open_fc(const play_fmt_t *src, play_fmt_t *min, const int len)
 {
     *min = src[0];
     for (int i = 1; i < len; i++) {
@@ -90,7 +90,7 @@ static int vector_min_pulp_open_fc(const float *src, float *min, const int len)
 
 #endif  /* CLUSTER */
 
-int vector_min_impl(const float *src, float *min, const int len)
+int vector_min_impl(const play_fmt_t *src, play_fmt_t *min, const int len)
 {
     int ret;
 

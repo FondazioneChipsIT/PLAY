@@ -5,13 +5,13 @@
 
 #ifdef  CLUSTER
 
-static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_trans_A_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int m, n, p;
     int num_ops;
     int rem_ops;
-    float sum1;
-    float sum2;
+    play_fmt_t sum1;
+    play_fmt_t sum2;
     int start;
     int block;
     int left;
@@ -34,8 +34,8 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
             sum2 = 0;
             m = 0;
             do {
-                float src_a1, src_a2;
-                float src_b1, src_b2;
+                play_fmt_t src_a1, src_a2;
+                play_fmt_t src_b1, src_b2;
 
                 src_a1 = src_a[m * dim_N + n];
                 src_a2 = src_a[(m + 1) * dim_N + n];
@@ -61,8 +61,8 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
         do {
             n = 0;
             do {
-                float a;
-                float b;
+                play_fmt_t a;
+                play_fmt_t b;
 
                 a = src_a[(dim_M - 1) * dim_N + n];
                 b = src_b[(dim_M - 1) * dim_P + p];
@@ -83,9 +83,9 @@ static int matrix_mul_trans_A_pulp_open_cluster(const float *src_a, const float 
 
 #else   /* CLUSTER */
 
-static int matrix_mul_trans_A_pulp_open_fc(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_trans_A_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
-    float sum;
+    play_fmt_t sum;
 
     for (int n = 0; n < dim_N; n++) {
         for (int p = 0; p < dim_P; p++) {
@@ -101,7 +101,7 @@ static int matrix_mul_trans_A_pulp_open_fc(const float *src_a, const float *src_
 
 #endif  /* CLUSTER */
 
-int matrix_mul_trans_A_impl(const float *src_a, const float *src_b, float *dst, const int dim_M, const int dim_N, const int dim_P)
+int matrix_mul_trans_A_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int ret;
 

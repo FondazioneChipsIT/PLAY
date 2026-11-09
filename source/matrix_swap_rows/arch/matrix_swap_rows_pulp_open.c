@@ -5,9 +5,9 @@
 
 #ifdef CLUSTER
 
-static int matrix_swap_rows_pulp_open_cluster(float *mat, const int row_a, const int row_b, const int dim_N)
+static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
 {
-    float tmp;
+    play_fmt_t tmp;
     int start;
     int block;
     int left;
@@ -35,9 +35,9 @@ static int matrix_swap_rows_pulp_open_cluster(float *mat, const int row_a, const
 
 #else   /* CLUSTER */
 
-static int matrix_swap_rows_pulp_open_fc(float *mat, const int row_a, const int row_b, const int dim_N)
+static int matrix_swap_rows_pulp_open_fc(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
 {
-    float tmp;
+    play_fmt_t tmp;
 
     for (int n = 0; n < dim_N; n++) {
         tmp = mat[row_a * dim_N + n];
@@ -50,7 +50,7 @@ static int matrix_swap_rows_pulp_open_fc(float *mat, const int row_a, const int 
 
 #endif  /* CLUSTER */
 
-int matrix_swap_rows_impl(float *mat, const int row_a, const int row_b, const int dim_N)
+int matrix_swap_rows_impl(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
 {
     int ret;
 

@@ -8,7 +8,7 @@
 #include "pmsis.h"
 
 PI_L1 int perm[DIM_M] __attribute__((aligned(4)));
-PI_L1 float src[DIM_M * DIM_N] __attribute__((aligned(4)));
+PI_L1 play_fmt_t src[DIM_M * DIM_N] __attribute__((aligned(4)));
 
 static void initialize_data()
 {
@@ -34,13 +34,13 @@ static void check_result()
 
     test_result = matrix_compare(src, expected_mat, DIM_M, DIM_N);
     if (test_result)
-        test_result = vector_compare((float *) perm, (float *) expected_perm, DIM_M);
+        test_result = vector_compare((play_fmt_t *) perm, (play_fmt_t *) expected_perm, DIM_M);
 
 #ifdef  PRINT_DATA
     matrix_print(src, DIM_M, DIM_N, "result");
     matrix_print(expected_mat, DIM_M, DIM_N, "expected mat");
-    vector_print((float *)perm, DIM_M, "computed permutation");
-    vector_print((float *)expected_perm, DIM_M, "expected permutation");
+    vector_print((play_fmt_t *)perm, DIM_M, "computed permutation");
+    vector_print((play_fmt_t *)expected_perm, DIM_M, "expected permutation");
 #endif  /* PRINT_DATA */
 
     printf("INFO | Test %s\n", test_result ? "SUCCESS" : "FAILED");

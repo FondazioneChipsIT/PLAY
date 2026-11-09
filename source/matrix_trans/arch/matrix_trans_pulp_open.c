@@ -5,7 +5,7 @@
 
 #ifdef  CLUSTER
 
-static int matrix_trans_pulp_open_cluster(const float *src, float *dst, const int dim_M, const int dim_N)
+static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int col_start;
     int col_end;
@@ -30,7 +30,7 @@ static int matrix_trans_pulp_open_cluster(const float *src, float *dst, const in
         m = 0;
         ops = 0;
         do {
-            float src1, src2;
+            play_fmt_t src1, src2;
 
             src1 = src[m * dim_N + n];
             src2 = src[(m + 1) * dim_N + n];
@@ -60,7 +60,7 @@ static int matrix_trans_pulp_open_cluster(const float *src, float *dst, const in
 
 #else   /* CLUSTER */
 
-static int matrix_trans_pulp_open_fc(const float *src, float *dst, const int dim_M, const int dim_N)
+static int matrix_trans_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     for (int m = 0; m < dim_M; m++)
         for (int n = 0; n < dim_N; n++)
@@ -71,7 +71,7 @@ static int matrix_trans_pulp_open_fc(const float *src, float *dst, const int dim
 
 #endif  /* CLUSTER */
 
-int matrix_trans_impl(const float *src, float *dst, const int dim_M, const int dim_N)
+int matrix_trans_impl(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int ret;
 
