@@ -5,6 +5,59 @@
 
 #if CLUSTER
 
+#ifdef PLAY_PACKED
+
+static int vector_axpy_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len)
+{
+    const play_fmt_v2_t *a2;
+    const play_fmt_v2_t *b2;
+    play_fmt_v2_t *d2;
+    play_fmt_v2_t alpha2;
+    int pairs;
+    int full;
+    int id;
+    int i;
+
+    id = pi_core_id();
+
+    alpha2[0] = alpha;
+    alpha2[1] = alpha;
+
+    a2 = (const play_fmt_v2_t *) src_a;
+    b2 = (const play_fmt_v2_t *) src_b;
+    d2 = (play_fmt_v2_t *) dst;
+    pairs = len / 2;
+    full = pairs - pairs % (2 * NUM_CORES);
+
+    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+        play_fmt_v2_t a1, a3;
+        play_fmt_v2_t b1, b3;
+
+        a1 = a2[i];
+        b1 = b2[i];
+        a3 = a2[i + 1];
+        b3 = b2[i + 1];
+
+        d2[i] = a1 * alpha2 + b1;
+        d2[i + 1] = a3 * alpha2 + b3;
+    }
+
+    i = full + id;
+    if (i < pairs)
+        d2[i] = a2[i] * alpha2 + b2[i];
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dst[len - 1] = src_a[len - 1] * alpha + src_b[len - 1];
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int vector_axpy_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, const play_fmt_t alpha, play_fmt_t *dst, const int len)
 {
     int rem_ops;
@@ -55,6 +108,8 @@ static int vector_axpy_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 

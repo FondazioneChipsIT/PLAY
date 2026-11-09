@@ -57,6 +57,8 @@ The kernels are written once on the `play_fmt_t` type, which `play.h` defines ac
 
 With the default format the library is the plain `float` library it has always been. The narrow formats are supported on Pulp Open only: the Spatz kernels are written in assembly on 32-bit lanes and a format change would be a rewrite, not a retype. The `-march` carrying the required extensions is part of the toolchain environment, not of PLAY. The few math functions used by the kernels (`fabs`, `sqrt`) follow the format through `include/internal/fmt_math.h`, and the tests check the results against a tolerance made of an absolute and a relative term chosen per format (`TOLL_ABS` and `TOLL_REL` in `test/common/utils.h`, both overridable with `-D`).
 
+The narrow formats can use the packed-SIMD instructions (two elements in one 32-bit register) in two ways. The compiler's autovectorizer works on the scalar kernels as they are (`VECTORIZE=1`, clang only). Some kernels also have an explicit packed version of their cluster implementation, written on the `play_fmt_v2_t` pair type and kept in the same source file under `#ifdef PLAY_PACKED`; it is built with `PACKED=1` (`-DPLAY_PACKED`, narrow formats only) and the fabric-controller implementation stays scalar.
+
 ## Test
 Each kernel has an associated test case in the test directory. Each test subfolder contains a dedicated folder for the source code and compilation files for each supported architecture, along with a shared folder containing the test input data and a Python script for generating them. Each architecture implements its own  `main.c`, which loads the source data, calls the kernel under test with this data, and compares the calculated result with the expected one.
 
@@ -131,6 +133,7 @@ For testing, several make flags are available:
     - `NUM_CORES=<n>` — Number of cluster cores when `USE_CLUSTER=1` (default `NUM_CORES=1`, max value `NUM_CORES=8`)
     - `FORMAT=<format>` — Data format of the kernels and of the test data: `FP32` (default), `FP16` or `BF16` (see [Data Formats](#data-formats); the narrow formats need a clang toolchain whose `-march` carries the matching extensions)
     - `VECTORIZE=1` — Enable the packed-SIMD autovectorizer of the narrow formats (`-mno-strict-align -mllvm -riscv-xcvhv-vectorize`, clang only)
+    - `PACKED=1` — Build the explicit packed-SIMD kernels where they exist (`-DPLAY_PACKED`, narrow formats only; see [Data Formats](#data-formats))
 
 - Flags for `SPATZ`
     - `NUM_CC=<n>` - Number of Core-Complexes in Cluster (default `NUM_CC=1`, max value `NUM_CC=2`)

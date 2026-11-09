@@ -8,6 +8,78 @@
 PI_L1 play_fmt_t ZERO_f = 0.0f;
 PI_L1 play_fmt_t local_dot[NUM_CORES];
 
+#ifdef PLAY_PACKED
+
+static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+{
+    const play_fmt_v2_t *a2;
+    const play_fmt_v2_t *b2;
+    play_fmt_v2_t dot2_1;
+    play_fmt_v2_t dot2_2;
+    play_fmt_t dot_tmp;
+    int pairs;
+    int full;
+    int id;
+    int i;
+
+    id = pi_core_id();
+
+    dot2_1[0] = 0;
+    dot2_1[1] = 0;
+    dot2_2[0] = 0;
+    dot2_2[1] = 0;
+    dot_tmp = 0;
+
+    a2 = (const play_fmt_v2_t *) src_a;
+    b2 = (const play_fmt_v2_t *) src_b;
+    pairs = len / 2;
+    full = pairs - pairs % (2 * NUM_CORES);
+
+    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+        play_fmt_v2_t a1, a3;
+        play_fmt_v2_t b1, b3;
+
+        a1 = a2[i];
+        b1 = b2[i];
+        a3 = a2[i + 1];
+        b3 = b2[i + 1];
+
+        dot2_1 += a1 * b1;
+        dot2_2 += a3 * b3;
+    }
+
+    i = full + id;
+    if (i < pairs)
+        dot2_1 += a2[i] * b2[i];
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dot_tmp = src_a[len - 1] * src_b[len - 1];
+
+    dot2_1 += dot2_2;
+    local_dot[id] = dot_tmp + dot2_1[0] + dot2_1[1];
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    if (id != 0)
+        goto exit;
+
+    *dst = ZERO_f;
+    for (i = 0; i < NUM_CORES; i++)
+        *dst += local_dot[i];
+
+exit:
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
 {
     play_fmt_t dot_tmp1;
@@ -77,6 +149,8 @@ exit:
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 

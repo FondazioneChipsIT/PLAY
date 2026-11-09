@@ -7,6 +7,77 @@
 
 PI_L1 play_fmt_t local_min[NUM_CORES];
 
+#ifdef PLAY_PACKED
+
+#define MIN2(a, b)  __builtin_elementwise_minnum((a), (b))
+
+static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
+{
+    const play_fmt_v2_t *src2;
+    play_fmt_v2_t min2;
+    play_fmt_t min_tmp;
+    int pairs;
+    int full;
+    int id;
+    int i;
+
+    id = pi_core_id();
+
+    min_tmp = src[0];
+    min2[0] = min_tmp;
+    min2[1] = min_tmp;
+
+    src2 = (const play_fmt_v2_t *) src;
+    pairs = len / 2;
+    full = pairs - pairs % (2 * NUM_CORES);
+
+    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+        play_fmt_v2_t src_a, src_b;
+
+        src_a = src2[i];
+        src_b = src2[i + 1];
+
+        min2 = MIN2(min2, src_a);
+        min2 = MIN2(min2, src_b);
+    }
+
+    i = full + id;
+    if (i < pairs)
+        min2 = MIN2(min2, src2[i]);
+
+    min_tmp = min2[0] < min2[1] ? min2[0] : min2[1];
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES) && src[len - 1] < min_tmp)
+        min_tmp = src[len - 1];
+
+    local_min[id] = min_tmp;
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    if (id != 0) {
+        /* Only master core finds absolute minimum */
+        goto exit;
+    }
+
+    *min = local_min[0];
+    for (int i = 1; i < NUM_CORES; i++) {
+        if (local_min[i] < *min)
+            *min = local_min[i];
+    }
+
+exit:
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
 {
     play_fmt_t min_tmp;
@@ -74,6 +145,8 @@ exit:
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 

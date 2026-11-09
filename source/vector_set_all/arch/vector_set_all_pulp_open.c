@@ -5,6 +5,47 @@
 
 #ifdef  CLUSTER
 
+#ifdef PLAY_PACKED
+
+static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t val, const int len)
+{
+    play_fmt_v2_t *vec2;
+    play_fmt_v2_t val2;
+    int pairs;
+    int full;
+    int id;
+    int i;
+
+    id = pi_core_id();
+
+    val2[0] = val;
+    val2[1] = val;
+
+    vec2 = (play_fmt_v2_t *) vec;
+    pairs = len / 2;
+    full = pairs - pairs % (2 * NUM_CORES);
+
+    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+        vec2[i] = val2;
+        vec2[i + 1] = val2;
+    }
+
+    i = full + id;
+    if (i < pairs)
+        vec2[i] = val2;
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        vec[len - 1] = val;
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t val, const int len)
 {
     int tot_ops;
@@ -49,6 +90,8 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 

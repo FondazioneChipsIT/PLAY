@@ -5,6 +5,54 @@
 
 #ifdef CLUSTER
 
+#ifdef PLAY_PACKED
+
+static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
+{
+    const play_fmt_v2_t *s2;
+    play_fmt_v2_t *d2;
+    play_fmt_v2_t offset2;
+    int pairs;
+    int full;
+    int id;
+    int i;
+
+    id = pi_core_id();
+
+    offset2[0] = offset;
+    offset2[1] = offset;
+
+    s2 = (const play_fmt_v2_t *) src;
+    d2 = (play_fmt_v2_t *) dst;
+    pairs = len / 2;
+    full = pairs - pairs % (2 * NUM_CORES);
+
+    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+        play_fmt_v2_t s1, s3;
+
+        s1 = s2[i];
+        s3 = s2[i + 1];
+
+        d2[i] = s1 + offset2;
+        d2[i + 1] = s3 + offset2;
+    }
+
+    i = full + id;
+    if (i < pairs)
+        d2[i] = s2[i] + offset2;
+
+    if ((len % 2) && (id == (len / 2) % NUM_CORES))
+        dst[len - 1] = src[len - 1] + offset;
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
 {
     int tot_ops;
@@ -53,6 +101,8 @@ static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 
