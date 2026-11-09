@@ -49,7 +49,7 @@ bool scalar_compare(const play_fmt_t val_a, const play_fmt_t val_b)
 
     abs_diff = fabsf((float) val_a - (float) val_b);
     toll = TOLL_ABS + TOLL_REL * fabsf((float) val_b);
-    if (abs_diff > toll)
+    if (!(abs_diff <= toll))
         return false;
 
     return true;
@@ -63,7 +63,7 @@ bool vector_compare(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const int 
     for (int i = 0; i < len; i++) {
         abs_diff = fabsf((float) vec_a[i] - (float) vec_b[i]);
         toll = TOLL_ABS + TOLL_REL * fabsf((float) vec_b[i]);
-        if (abs_diff > toll)
+        if (!(abs_diff <= toll))
             return false;
     }
 
@@ -78,7 +78,7 @@ bool vector_compare_abs(const play_fmt_t *vec_a, const play_fmt_t *vec_b, const 
     for (int i = 0; i < len; i++) {
         abs_diff = fabsf(fabsf((float) vec_a[i]) - fabsf((float) vec_b[i]));
         toll = TOLL_ABS + TOLL_REL * fabsf((float) vec_b[i]);
-        if (abs_diff > toll) {
+        if (!(abs_diff <= toll)) {
             printf("abs_diff = %f\n", abs_diff);
             return false;
         }
@@ -96,7 +96,7 @@ bool matrix_compare(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const int 
         for (int c = 0; c < cols; c++) {
             abs_diff = fabsf((float) mat_a[r * cols + c] - (float) mat_b[r * cols + c]);
             toll = TOLL_ABS + TOLL_REL * fabsf((float) mat_b[r * cols + c]);
-            if (abs_diff > toll)
+            if (!(abs_diff <= toll))
                 return false;
         }
     }
@@ -113,7 +113,7 @@ bool matrix_compare_abs(const play_fmt_t *mat_a, const play_fmt_t *mat_b, const 
         for (int c = 0; c < cols; c++) {
             abs_diff = fabsf(fabsf((float) mat_a[r * cols + c]) - fabsf((float) mat_b[r * cols + c]));
             toll = TOLL_ABS + TOLL_REL * fabsf((float) mat_b[r * cols + c]);
-            if (abs_diff > toll) {
+            if (!(abs_diff <= toll)) {
                 printf("abs_diff = %f\n", abs_diff);
                 return false;
             }
