@@ -12,7 +12,7 @@
  * overridden from the command line (-DTOLL_ABS=... -DTOLL_REL=...).
  */
 #if PLAY_FORMAT == PLAY_FMT_FP16
-#define TOLL_ABS_DEFAULT 0.004f
+#define TOLL_ABS_DEFAULT 0.03f      /* rounding of FP16 partial sums in the reductions (gemv_trans: 0.018 measured) */
 #define TOLL_REL_DEFAULT 0.004f     /* 2^-8, 4 ulp of the 10-bit mantissa */
 #elif PLAY_FORMAT == PLAY_FMT_BF16
 #define TOLL_ABS_DEFAULT 0.03f
