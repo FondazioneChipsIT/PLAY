@@ -5,6 +5,62 @@
 
 #ifdef  CLUSTER
 
+#ifdef PLAY_PACKED
+
+static int matrix_mul_trans_B_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
+{
+    const play_fmt_v2_t *a2;
+    const play_fmt_v2_t *b2;
+    play_fmt_v2_t sum2_1;
+    play_fmt_v2_t sum2_2;
+    play_fmt_t sum;
+    int row_start;
+    int row_end;
+    int pairs;
+    int block;
+    int left;
+    int id;
+    int m, p, j;
+
+    id = pi_core_id();
+    block = dim_P / NUM_CORES;
+    left = dim_P % NUM_CORES;
+    row_start = id * block + (id < left ? id : left);
+    row_end = row_start + block + (id < left ? 1 : 0);
+    pairs = dim_N / 2;
+
+    for (p = row_start; p < row_end; p++) {
+        for (m = 0; m < dim_M; m++) {
+            a2 = (const play_fmt_v2_t *) &src_a[m * dim_N];
+            b2 = (const play_fmt_v2_t *) &src_b[p * dim_N];
+            sum2_1[0] = 0;
+            sum2_1[1] = 0;
+            sum2_2[0] = 0;
+            sum2_2[1] = 0;
+            for (j = 0; (j + 1) < pairs; j += 2) {
+                sum2_1 += a2[j] * b2[j];
+                sum2_2 += a2[j + 1] * b2[j + 1];
+            }
+            if (j < pairs)
+                sum2_1 += a2[j] * b2[j];
+
+            sum2_1 += sum2_2;
+            sum = sum2_1[0] + sum2_1[1];
+            if (dim_N % 2)
+                sum += src_a[m * dim_N + (dim_N - 1)] * src_b[p * dim_N + (dim_N - 1)];
+            dst[m * dim_P + p] = sum;
+        }
+    }
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int matrix_mul_trans_B_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int row_start;
@@ -80,6 +136,8 @@ static int matrix_mul_trans_B_pulp_open_cluster(const play_fmt_t *src_a, const p
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 

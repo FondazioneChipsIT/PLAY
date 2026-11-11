@@ -5,6 +5,61 @@
 
 #ifdef  CLUSTER
 
+#ifdef PLAY_PACKED
+
+int matrix_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
+{
+    const play_fmt_v2_t *s2;
+    play_fmt_v2_t *d2;
+    int row_start;
+    int row_end;
+    int block;
+    int left;
+    int pairs;
+    int id;
+    int i, j;
+
+    id = pi_core_id();
+    block = dim_M / NUM_CORES;
+    left = dim_M % NUM_CORES;
+    row_start = id * block + (id < left ? id : left);
+    row_end = row_start + block + (id < left ? 1 : 0);
+
+    i = row_start * dim_N;
+    if ((i & 1) && (i < row_end * dim_N)) {
+        dst[i] = src[i];
+        i++;
+    }
+
+    s2 = (const play_fmt_v2_t *) &src[i];
+    d2 = (play_fmt_v2_t *) &dst[i];
+    pairs = (row_end * dim_N - i) / 2;
+
+    for (j = 0; (j + 1) < pairs; j += 2) {
+        play_fmt_v2_t s1, s3;
+
+        s1 = s2[j];
+        s3 = s2[j + 1];
+
+        d2[j] = s1;
+        d2[j + 1] = s3;
+    }
+    if (j < pairs)
+        d2[j] = s2[j];
+
+    i += 2 * pairs;
+    if (i < row_end * dim_N)
+        dst[i] = src[i];
+
+#if NUM_CORES > 1
+    pi_cl_team_barrier();
+#endif
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 int matrix_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
     int row_start;
@@ -60,6 +115,8 @@ int matrix_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, cons
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 
