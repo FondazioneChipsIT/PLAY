@@ -16,39 +16,45 @@ static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, 
     const play_fmt_v2_t *src2;
     play_fmt_v2_t min2;
     play_fmt_t min_tmp;
-    int pairs;
-    int full;
+    int block;
+    int start;
+    int left;
+    int end;
     int id;
     int i;
 
     id = pi_core_id();
+    block = len / NUM_CORES;
+    left = len % NUM_CORES;
+    start = id * block + (id < left ? id : left);
+    end = start + block + (id < left ? 1 : 0);
+    min_tmp = src[start];
 
-    min_tmp = src[0];
+    i = start;
+    if (i & 1)
+        i++;
+
     min2[0] = min_tmp;
     min2[1] = min_tmp;
+    src2 = (const play_fmt_v2_t *) &src[i];
 
-    src2 = (const play_fmt_v2_t *) src;
-    pairs = len / 2;
-    full = pairs - pairs % (2 * NUM_CORES);
-
-    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
+    for (; (i + 3) < end; i += 4) {
         play_fmt_v2_t src_a, src_b;
 
-        src_a = src2[i];
-        src_b = src2[i + 1];
+        src_a = src2[0];
+        src_b = src2[1];
+        src2 += 2;
 
         min2 = MIN2(min2, src_a);
         min2 = MIN2(min2, src_b);
     }
 
-    i = full + id;
-    if (i < pairs)
-        min2 = MIN2(min2, src2[i]);
-
     min_tmp = min2[0] < min2[1] ? min2[0] : min2[1];
 
-    if ((len % 2) && (id == (len / 2) % NUM_CORES) && src[len - 1] < min_tmp)
-        min_tmp = src[len - 1];
+    for (; i < end; i++) {
+        if (src[i] < min_tmp)
+            min_tmp = src[i];
+    }
 
     local_min[id] = min_tmp;
 

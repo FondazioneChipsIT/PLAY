@@ -11,31 +11,47 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
 {
     play_fmt_v2_t *vec2;
     play_fmt_v2_t val2;
-    int pairs;
-    int full;
+    int tot_ops;
+    int block;
+    int start;
+    int left;
+    int end;
     int id;
+    int op;
     int i;
 
     id = pi_core_id();
+    block = len / NUM_CORES;
+    left = len % NUM_CORES;
+    start = id * block + (id < left ? id : left);
+    end = start + block + (id < left ? 1 : 0);
 
     val2[0] = val;
     val2[1] = val;
 
-    vec2 = (play_fmt_v2_t *) vec;
-    pairs = len / 2;
-    full = pairs - pairs % (2 * NUM_CORES);
-
-    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
-        vec2[i] = val2;
-        vec2[i + 1] = val2;
+    i = start;
+    if ((i & 1) && (i < end)) {
+        vec[i] = val;
+        i++;
     }
 
-    i = full + id;
-    if (i < pairs)
-        vec2[i] = val2;
+    vec2 = (play_fmt_v2_t *) &vec[i];
+    tot_ops = (end - i) / 4;
+    op = 0;
 
-    if ((len % 2) && (id == (len / 2) % NUM_CORES))
-        vec[len - 1] = val;
+    if (tot_ops > 0) {
+        do {
+            vec2[0] = val2;
+            vec2[1] = val2;
+
+            vec2 += 2;
+            op++;
+        } while (op < tot_ops);
+        i += 4 * tot_ops;
+    }
+
+    for (; i < end; i++)
+        vec[i] = val;
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();

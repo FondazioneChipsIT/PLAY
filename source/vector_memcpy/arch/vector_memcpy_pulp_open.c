@@ -11,34 +11,51 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *ds
 {
     const play_fmt_v2_t *s2;
     play_fmt_v2_t *d2;
-    int pairs;
-    int full;
+    int tot_ops;
+    int block;
+    int start;
+    int left;
+    int end;
     int id;
+    int op;
     int i;
 
     id = pi_core_id();
+    block = len / NUM_CORES;
+    left = len % NUM_CORES;
+    start = id * block + (id < left ? id : left);
+    end = start + block + (id < left ? 1 : 0);
 
-    s2 = (const play_fmt_v2_t *) src;
-    d2 = (play_fmt_v2_t *) dst;
-    pairs = len / 2;
-    full = pairs - pairs % (2 * NUM_CORES);
-
-    for (i = 2 * id; i < full; i += 2 * NUM_CORES) {
-        play_fmt_v2_t s1, s3;
-
-        s1 = s2[i];
-        s3 = s2[i + 1];
-
-        d2[i] = s1;
-        d2[i + 1] = s3;
+    i = start;
+    if ((i & 1) && (i < end)) {
+        dst[i] = src[i];
+        i++;
     }
 
-    i = full + id;
-    if (i < pairs)
-        d2[i] = s2[i];
+    s2 = (const play_fmt_v2_t *) &src[i];
+    d2 = (play_fmt_v2_t *) &dst[i];
+    tot_ops = (end - i) / 4;
+    op = 0;
 
-    if ((len % 2) && (id == (len / 2) % NUM_CORES))
-        dst[len - 1] = src[len - 1];
+    if (tot_ops > 0) {
+        do {
+            play_fmt_v2_t x1, x2;
+
+            x1 = s2[0];
+            x2 = s2[1];
+
+            d2[0] = x1;
+            d2[1] = x2;
+
+            s2 += 2;
+            d2 += 2;
+            op++;
+        } while (op < tot_ops);
+        i += 4 * tot_ops;
+    }
+
+    for (; i < end; i++)
+        dst[i] = src[i];
 
 #if NUM_CORES > 1
     pi_cl_team_barrier();
