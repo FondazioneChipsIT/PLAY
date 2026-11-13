@@ -79,6 +79,105 @@ static inline int set_permutation_identity(int *vec, const int len)
 
 }
 
+#ifdef PLAY_PACKED
+
+static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
+{
+    play_fmt_v2_t factor2;
+    int dim_min;
+    int id;
+
+    set_permutation_identity(perm, dim_M);
+
+    id = pi_core_id();
+    dim_min = dim_M < dim_N ? dim_M : dim_N;
+
+    for (int k = 0; k < dim_min; k++) {
+        if (id == 0) {
+            int row_max;
+            float max_val;
+            float cur_val;
+
+            row_max = k;
+            max_val = play_fabs(mat[k * dim_N + k]);
+
+            for (int m = k + 1; m < dim_M; m++) {
+                cur_val = play_fabs(mat[m * dim_N + k]);
+                if (cur_val > max_val) {
+                    row_max = m;
+                    max_val = cur_val;
+                }
+            }
+
+            if (row_max != k) {
+                swap_rows(mat, k, row_max, dim_M, dim_N);
+                swap_elems(perm, k, row_max);
+            }
+
+            pivot = mat[k * dim_N + k];
+            if (pivot == 0) {
+#ifdef  ENABLE_LOGGING
+                printf("ERROR | Zero pivot found at position %d during LU decomposition - Matrix is singular\n", k);
+#endif  /* ENABLE_LOGGING */
+                pmsis_exit(-1);
+            } else {
+                p_inv = ONE_f / pivot;
+            }
+        }   /* id 0 */
+
+#if NUM_CORES > 1
+        pi_cl_team_barrier();
+#endif
+
+        int start;
+        int block;
+        int left;
+        int end;
+
+        block = (dim_M - (k + 1)) / NUM_CORES;
+        left = (dim_M - (k + 1)) % NUM_CORES;
+        start = id * block + (id < left ? id : left) + (k + 1);
+        end = start + block + (id < left ? 1 : 0);
+
+        for (int m = start; m < end; m++) {
+            const play_fmt_v2_t *k2;
+            play_fmt_v2_t *m2;
+            float factor;
+            int pairs;
+            int n;
+
+            factor = mat[m * dim_N + k] * p_inv;
+            mat[m * dim_N + k] = factor;
+            factor2[0] = factor;
+            factor2[1] = factor;
+
+            n = k + 1;
+            if ((n & 1) && (n < dim_N)) {
+                mat[m * dim_N + n] -= factor * mat[k * dim_N + n];
+                n++;
+            }
+
+            m2 = (play_fmt_v2_t *) &mat[m * dim_N + n];
+            k2 = (const play_fmt_v2_t *) &mat[k * dim_N + n];
+            pairs = (dim_N - n) / 2;
+            for (int j = 0; j < pairs; j++)
+                m2[j] -= factor2 * k2[j];
+
+            if ((dim_N - n) % 2)
+                mat[m * dim_N + (dim_N - 1)] -= factor * mat[k * dim_N + (dim_N - 1)];
+        }
+
+#if NUM_CORES > 1
+        pi_cl_team_barrier();
+#endif
+
+    }
+
+    return 0;
+}
+
+#else   /* PLAY_PACKED */
+
 static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
 {
     int dim_min;
@@ -156,6 +255,8 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
 
     return 0;
 }
+
+#endif  /* PLAY_PACKED */
 
 #else   /* CLUSTER */
 
