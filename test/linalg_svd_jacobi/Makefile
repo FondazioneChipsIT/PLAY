@@ -39,6 +39,12 @@ ifdef PACKED
 APP_CFLAGS += -DPLAY_PACKED
 endif
 
+# 16-bit formats: the Jacobi rotations, with the matrix stored in 16 bit, reach about 1% on the
+# eigenvalues after the 7 sweeps the algorithm takes (FP32 reaches 1e-5)
+ifneq ($(or $(FORMAT),FP32),FP32)
+APP_CFLAGS += -DTOLL_ABS=0.1f -DTOLL_REL=0.01f
+endif
+
 ifdef ENABLE_LOGGING
 APP_CFLAGS += -DENABLE_LOGGING
 endif

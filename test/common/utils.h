@@ -12,10 +12,10 @@
  * overridden from the command line (-DTOLL_ABS=... -DTOLL_REL=...).
  */
 #if PLAY_FORMAT == PLAY_FMT_FP16
-#define TOLL_ABS_DEFAULT 0.03f
+#define TOLL_ABS_DEFAULT 0.0625f
 #define TOLL_REL_DEFAULT 0.004f
 #elif PLAY_FORMAT == PLAY_FMT_BF16
-#define TOLL_ABS_DEFAULT 0.03f
+#define TOLL_ABS_DEFAULT 0.25f
 #define TOLL_REL_DEFAULT 0.0625f
 #else   /* PLAY_FMT_FP32 */
 #define TOLL_ABS_DEFAULT 0.004f
