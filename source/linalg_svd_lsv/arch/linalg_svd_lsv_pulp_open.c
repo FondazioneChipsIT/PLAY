@@ -154,6 +154,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
             if (rem_ops_M)
                 dst[(dim_M - 1) * dim_N + k] = 0;
 
+            k++;
             continue;
         } else {
             s_inv = ONE_f / s;
