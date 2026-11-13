@@ -5,8 +5,8 @@
 
 #ifdef  CLUSTER
 
-PI_L1 play_fmt_t ZERO_f = 0.0f;
-PI_L1 play_fmt_t ONE_f = 1.0f;
+PI_L1 float ZERO_f = 0.0f;
+PI_L1 float ONE_f = 1.0f;
 
 #ifdef PLAY_PACKED
 
@@ -107,7 +107,7 @@ static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play
 
 #else   /* PLAY_PACKED */
 
-static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, const int n, const int dim_M, const int dim_N, play_fmt_t *sum1, play_fmt_t *sum2)
+static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, const int n, const int dim_M, const int dim_N, float *sum1, float *sum2)
 {
     int num_ops;
     int ops;
@@ -119,8 +119,8 @@ static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, c
     *sum2 = 0;
     num_ops = dim_M / 2;
     do {
-        play_fmt_t mat1, mat2;
-        play_fmt_t vec1, vec2;
+        float mat1, mat2;
+        float vec1, vec2;
 
         mat1 = mat[m * dim_N + n];
         mat2 = mat[(m + 1) * dim_N + n];
@@ -140,8 +140,8 @@ static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play
     int row_start;
     int row_end;
     int rem_ops;
-    play_fmt_t sum1;
-    play_fmt_t sum2;
+    float sum1;
+    float sum2;
     int block;
     int left;
     int id;
@@ -195,12 +195,12 @@ static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play
 
 #else   /* CLUSTER */
 
-play_fmt_t ZERO_f = 0.0f;
-play_fmt_t ONE_f = 1.0f;
+float ZERO_f = 0.0f;
+float ONE_f = 1.0f;
 
 static int linalg_gemv_trans_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
-    play_fmt_t sum;
+    float sum;
 
     if (alpha == ZERO_f) {
         if (beta == ZERO_f)

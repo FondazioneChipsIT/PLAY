@@ -2,7 +2,6 @@
 #define ARCH_INTERFACE_H_
 
 #include "play.h"
-#include "internal/fmt_math.h"
 
 int linalg_cholesky_decomp_impl(const play_fmt_t *src, play_fmt_t *dst, const int dim);
 int linalg_gemv_impl(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N);

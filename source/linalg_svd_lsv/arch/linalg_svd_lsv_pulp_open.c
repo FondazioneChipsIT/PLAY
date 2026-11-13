@@ -5,8 +5,8 @@
 
 #ifdef  CLUSTER
 
-static PI_L1 play_fmt_t ONE_f = 1;
-static PI_L1 play_fmt_t EPSILON = 1e-12;
+static PI_L1 float ONE_f = 1;
+static PI_L1 float EPSILON = 1e-12;
 
 #ifdef PLAY_PACKED
 
@@ -115,8 +115,8 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
     int tot_ops_N;
     int rem_ops_N;
     int k, m, n;
-    play_fmt_t sum1;
-    play_fmt_t sum2;
+    float sum1;
+    float sum2;
     int block;
     int start;
     int left;
@@ -137,7 +137,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
 
     k = start;
     do {
-        play_fmt_t s, s_inv;
+        float s, s_inv;
         s = vec_S[k];
 
         if (s < EPSILON) {
@@ -167,8 +167,8 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
             n = 0;
             op = 0;
             do {
-                play_fmt_t src1, src2;
-                play_fmt_t v1, v2;
+                float src1, src2;
+                float v1, v2;
 
                 src1 = src[m * dim_N + n];
                 src2 = src[m * dim_N + (n + 1)];
@@ -204,12 +204,12 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
 #else   /* CLUSTER */
 
 /* these variable needs to be re-defined for FC since it does not have access to L1 memory */
-static play_fmt_t ONE_f = 1;
-static play_fmt_t EPSILON = 1e-12;
+static float ONE_f = 1;
+static float EPSILON = 1e-12;
 
 int linalg_svd_lsv_pulp_open_fc(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
 {
-    play_fmt_t sum;
+    float sum;
 
     for (int k = 0; k < dim_N; k++) {
         /* Optimization */

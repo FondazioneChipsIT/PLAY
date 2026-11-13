@@ -5,7 +5,7 @@
 
 #include "pmsis.h"
 
-static PI_L1 play_fmt_t ONE_f = 1;
+static PI_L1 float ONE_f = 1;
 
 static inline int swap_elems(int *vec, const int idx_a, const int idx_b)
 {
@@ -22,7 +22,7 @@ static inline int swap_rows(play_fmt_t *mat, const int row_a, const int row_b, c
 {
     for (int n = 0; n < dim_N; n++) {
         int idx_a, idx_b;
-        play_fmt_t tmp;
+        float tmp;
 
         idx_a = row_a * dim_N + n;
         idx_b = row_b * dim_N + n;
@@ -37,8 +37,8 @@ static inline int swap_rows(play_fmt_t *mat, const int row_a, const int row_b, c
 
 #ifdef  CLUSTER
 
-PI_L1 play_fmt_t pivot;
-PI_L1 play_fmt_t p_inv;
+PI_L1 float pivot;
+PI_L1 float p_inv;
 
 static inline int set_permutation_identity(int *vec, const int len)
 {
@@ -99,10 +99,10 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
             float cur_val;
 
             row_max = k;
-            max_val = play_fabs(mat[k * dim_N + k]);
+            max_val = fabsf(mat[k * dim_N + k]);
 
             for (int m = k + 1; m < dim_M; m++) {
-                cur_val = play_fabs(mat[m * dim_N + k]);
+                cur_val = fabsf(mat[m * dim_N + k]);
                 if (cur_val > max_val) {
                     row_max = m;
                     max_val = cur_val;
@@ -192,14 +192,14 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
         if (id == 0) {
             /* Partial Pivoting */
             int row_max;
-            play_fmt_t max_val;
-            play_fmt_t cur_val;
+            float max_val;
+            float cur_val;
 
             row_max = k;
-            max_val = play_fabs(mat[k * dim_N + k]);
+            max_val = fabsf(mat[k * dim_N + k]);
 
             for (int m = k + 1; m < dim_M; m++) {
-                cur_val = play_fabs(mat[m * dim_N + k]);
+                cur_val = fabsf(mat[m * dim_N + k]);
                 if (cur_val > max_val) {
                     row_max = m;
                     max_val = cur_val;
@@ -238,7 +238,7 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
         end = start + block + (id < left ? 1 : 0);
 
         for (int m = start; m < end; m++) {
-            play_fmt_t factor;
+            float factor;
 
             factor = mat[m * dim_N + k] * p_inv;
             mat[m * dim_N + k] = factor;
@@ -270,12 +270,12 @@ static int set_permutation_identity(int *vec, const int len)
 
 static int linalg_lu_decomp_pulp_open_fc(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
 {
-    play_fmt_t factor;
-    play_fmt_t pivot;
+    float factor;
+    float pivot;
     int dim_min;
     int row_max;
-    play_fmt_t max;
-    play_fmt_t val;
+    float max;
+    float val;
 
     set_permutation_identity(perm, dim_M);
 
@@ -284,9 +284,9 @@ static int linalg_lu_decomp_pulp_open_fc(play_fmt_t *mat, int *perm, const int d
 
         /* Partial Pivoting */
         row_max = k;
-        max = play_fabs(mat[k * dim_N + k]);
+        max = fabsf(mat[k * dim_N + k]);
         for (int m = k + 1; m < dim_M; m++) {
-            val = play_fabs(mat[m * dim_N + k]);
+            val = fabsf(mat[m * dim_N + k]);
             if (val > max) {
                 row_max = m;
                 max = val;

@@ -5,8 +5,8 @@
 
 #ifdef CLUSTER
 
-PI_L1 play_fmt_t ZERO_f = 0.0f;
-PI_L1 play_fmt_t local_dot[NUM_CORES];
+PI_L1 float ZERO_f = 0.0f;
+PI_L1 float local_dot[NUM_CORES];
 
 #ifdef PLAY_PACKED
 
@@ -16,7 +16,7 @@ static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_
     const play_fmt_v2_t *b2;
     play_fmt_v2_t dot2_1;
     play_fmt_v2_t dot2_2;
-    play_fmt_t dot_tmp;
+    float dot_tmp;
     int tot_ops;
     int block;
     int start;
@@ -99,8 +99,8 @@ exit:
 
 static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
 {
-    play_fmt_t dot_tmp1;
-    play_fmt_t dot_tmp2;
+    float dot_tmp1;
+    float dot_tmp2;
     int rem_ops;
     int tot_ops;
     int block;
@@ -125,8 +125,8 @@ static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_
 
     do {
         int idx1, idx2;
-        play_fmt_t a1, a2;
-        play_fmt_t b1, b2;
+        float a1, a2;
+        float b1, b2;
 
         idx1 = i;
         idx2 = i + 1;
@@ -154,9 +154,10 @@ static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_
     if (id != 0)
         goto exit;
 
-    *dst = ZERO_f;
+    dot_tmp1 = ZERO_f;
     for (i = 0; i < NUM_CORES; i++)
-        *dst += local_dot[i];
+        dot_tmp1 += local_dot[i];
+    *dst = dot_tmp1;
 
 exit:
 
@@ -171,7 +172,7 @@ exit:
 
 #else   /* CLUSTER */
 
-play_fmt_t ZERO_f = 0.0f;
+float ZERO_f = 0.0f;
 
 static int vector_dot_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
 {

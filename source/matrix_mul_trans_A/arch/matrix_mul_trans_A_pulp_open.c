@@ -98,8 +98,8 @@ static int matrix_mul_trans_A_pulp_open_cluster(const play_fmt_t *src_a, const p
     int m, n, p;
     int num_ops;
     int rem_ops;
-    play_fmt_t sum1;
-    play_fmt_t sum2;
+    float sum1;
+    float sum2;
     int start;
     int block;
     int left;
@@ -122,8 +122,8 @@ static int matrix_mul_trans_A_pulp_open_cluster(const play_fmt_t *src_a, const p
             sum2 = 0;
             m = 0;
             do {
-                play_fmt_t src_a1, src_a2;
-                play_fmt_t src_b1, src_b2;
+                float src_a1, src_a2;
+                float src_b1, src_b2;
 
                 src_a1 = src_a[m * dim_N + n];
                 src_a2 = src_a[(m + 1) * dim_N + n];
@@ -149,8 +149,8 @@ static int matrix_mul_trans_A_pulp_open_cluster(const play_fmt_t *src_a, const p
         do {
             n = 0;
             do {
-                play_fmt_t a;
-                play_fmt_t b;
+                float a;
+                float b;
 
                 a = src_a[(dim_M - 1) * dim_N + n];
                 b = src_b[(dim_M - 1) * dim_P + p];
@@ -175,7 +175,7 @@ static int matrix_mul_trans_A_pulp_open_cluster(const play_fmt_t *src_a, const p
 
 static int matrix_mul_trans_A_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
 {
-    play_fmt_t sum;
+    float sum;
 
     for (int n = 0; n < dim_N; n++) {
         for (int p = 0; p < dim_P; p++) {

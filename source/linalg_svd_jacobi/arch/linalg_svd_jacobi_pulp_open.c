@@ -8,14 +8,14 @@
 
 #ifdef CLUSTER
 
-static PI_L1 play_fmt_t ZERO_f = 0.0f;
-static PI_L1 play_fmt_t ONE_f = 1.0f;
-static PI_L1 play_fmt_t TWO_f = 2.0f;
+static PI_L1 float ZERO_f = 0.0f;
+static PI_L1 float ONE_f = 1.0f;
+static PI_L1 float TWO_f = 2.0f;
 static PI_L1 int MAX_ITER = 200;
-static PI_L1 play_fmt_t EPSILON = 1e-12;
+static PI_L1 float EPSILON = 1e-12;
 
-PI_L1 play_fmt_t local_max[NUM_CORES];
-PI_L1 play_fmt_t max_offdiag;
+PI_L1 float local_max[NUM_CORES];
+PI_L1 float max_offdiag;
 
 static inline void barrier()
 {
@@ -84,10 +84,10 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
 
             for (int pair = pair_start; pair < pair_end; pair++) {
                 bool compute;
-                play_fmt_t cos;
-                play_fmt_t sin;
-                play_fmt_t tau;
-                play_fmt_t t;
+                float cos;
+                float sin;
+                float tau;
+                float t;
                 int i;
                 int j;
 
@@ -100,23 +100,23 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
                 if (i >= dim_M || j >= dim_M)
                     compute = false;
 
-                if (play_fabs(mat[i * dim_M + j]) < EPSILON)
+                if (fabsf(mat[i * dim_M + j]) < EPSILON)
                     compute = false;
 
                 if (compute) {
                     tau = (mat[j * dim_M + j] - mat[i * dim_M + i]) / (TWO_f * mat[i * dim_M + j]);
                     if (tau >= ZERO_f)
-                        t = ONE_f / (tau + play_sqrt(ONE_f + tau * tau));
+                        t = ONE_f / (tau + sqrtf(ONE_f + tau * tau));
                     else
-                        t = ONE_f / (tau - play_sqrt(ONE_f + tau * tau));
+                        t = ONE_f / (tau - sqrtf(ONE_f + tau * tau));
 
-                    cos = ONE_f / play_sqrt(ONE_f + t * t);
+                    cos = ONE_f / sqrtf(ONE_f + t * t);
                     sin = t * cos;
 
                     /* Update rows i and j of MAT */
                     for (int m = 0; m < dim_M; m++) {
-                        play_fmt_t im;
-                        play_fmt_t jm;
+                        float im;
+                        float jm;
 
                         im = mat[i * dim_M + m];
                         jm = mat[j * dim_M + m];
@@ -131,8 +131,8 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
                 if (compute) {
                     /* Update cols i and j of MAT */
                     for (int n = 0; n < dim_M; n++) {
-                        play_fmt_t ni;
-                        play_fmt_t nj;
+                        float ni;
+                        float nj;
 
                         ni = mat[n * dim_M + i];
                         nj = mat[n * dim_M + j];
@@ -143,8 +143,8 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
 
                     /* Update cols i and j of V */
                     for (int n = 0; n < dim_M; n++) {
-                        play_fmt_t ni;
-                        play_fmt_t nj;
+                        float ni;
+                        float nj;
 
                         ni = mat_V[n * dim_M + i];
                         nj = mat_V[n * dim_M + j];
@@ -154,8 +154,8 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
                     }
 
 
-                    if (play_fabs(mat[i * dim_M + j]) > local_max[id])
-                        local_max[id] = play_fabs(mat[i * dim_M + j]);
+                    if (fabsf(mat[i * dim_M + j]) > local_max[id])
+                        local_max[id] = fabsf(mat[i * dim_M + j]);
                 }
 
             } /* End of pairs for this round */
@@ -206,7 +206,7 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
 
     for (int i = start; i < end; i++) {
         if (mat[i * dim_M + i] > 0)
-            vec_S[i] = play_sqrt(mat[i * dim_M + i]);
+            vec_S[i] = sqrtf(mat[i * dim_M + i]);
         else
             vec_S[i] = 0;
     }
@@ -219,11 +219,11 @@ int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, pla
 #else   /* CLUSTER */
 
 /* these variable needs to be re-defined for FC since it does not have access to L1 memory */
-static play_fmt_t ZERO_f = 0.0f;
-static play_fmt_t ONE_f = 1.0f;
-static play_fmt_t TWO_f = 2.0f;
+static float ZERO_f = 0.0f;
+static float ONE_f = 1.0f;
+static float TWO_f = 2.0f;
 static int MAX_ITER = 200;
-static play_fmt_t EPSILON = 1e-12;
+static float EPSILON = 1e-12;
 
 static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
 {
@@ -236,7 +236,7 @@ static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
 static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M)
 {
     int iter;
-    play_fmt_t max_offdiag;
+    float max_offdiag;
 
     matrix_set_identity(mat_V, dim_M);
 
@@ -246,30 +246,30 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
 
         for (int i = 0; i < (dim_M - 1); i++) {
             for (int j = (i + 1); j < dim_M; j++) {
-                play_fmt_t cos;
-                play_fmt_t sin;
-                play_fmt_t tau;
-                play_fmt_t t;
+                float cos;
+                float sin;
+                float tau;
+                float t;
 
                 if (i >= dim_M || j >= dim_M)
                     continue;
 
-                if (play_fabs(mat[i * dim_M + j]) < EPSILON)
+                if (fabsf(mat[i * dim_M + j]) < EPSILON)
                     continue;
 
                 tau = (mat[j * dim_M + j] - mat[i * dim_M + i]) / (TWO_f * mat[i * dim_M + j]);
                 if (tau >= ZERO_f)
-                    t = ONE_f / (tau + play_sqrt(ONE_f + tau * tau));
+                    t = ONE_f / (tau + sqrtf(ONE_f + tau * tau));
                 else
-                    t = ONE_f / (tau - play_sqrt(ONE_f + tau * tau));
+                    t = ONE_f / (tau - sqrtf(ONE_f + tau * tau));
 
-                cos = ONE_f / play_sqrt(ONE_f + t * t);
+                cos = ONE_f / sqrtf(ONE_f + t * t);
                 sin = t * cos;
 
                 /* Update rows i and j of MAT */
                 for (int m = 0; m < dim_M; m++) {
-                    play_fmt_t im;
-                    play_fmt_t jm;
+                    float im;
+                    float jm;
 
                     im = mat[i * dim_M + m];
                     jm = mat[j * dim_M + m];
@@ -280,8 +280,8 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
 
                 /* Update cols i and j of MAT */
                 for (int n = 0; n < dim_M; n++) {
-                    play_fmt_t ni;
-                    play_fmt_t nj;
+                    float ni;
+                    float nj;
 
                     ni = mat[n * dim_M + i];
                     nj = mat[n * dim_M + j];
@@ -292,8 +292,8 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
 
                 /* Update cols i and j of V */
                 for (int n = 0; n < dim_M; n++) {
-                    play_fmt_t ni;
-                    play_fmt_t nj;
+                    float ni;
+                    float nj;
 
                     ni = mat_V[n * dim_M + i];
                     nj = mat_V[n * dim_M + j];
@@ -302,8 +302,8 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
                     mat_V[n * dim_M + j] = (sin * ni) + (cos * nj);
                 }
 
-                if (play_fabs(mat[i * dim_M + j]) > max_offdiag)
-                    max_offdiag = play_fabs(mat[i * dim_M + j]);
+                if (fabsf(mat[i * dim_M + j]) > max_offdiag)
+                    max_offdiag = fabsf(mat[i * dim_M + j]);
             }
         }
 
@@ -314,7 +314,7 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
     /* Extract singular values as sqrtf of diag(MAT) */
     for (int i = 0; i < dim_M; i++) {
         if (mat[i * dim_M + i] > 0)
-            vec_S[i] = play_sqrt(mat[i * dim_M + i]);
+            vec_S[i] = sqrtf(mat[i * dim_M + i]);
         else
             vec_S[i] = 0;
     }

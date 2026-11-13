@@ -7,7 +7,7 @@ PI_L1 play_fmt_t *y;
 
 #ifdef  CLUSTER
 
-PI_L1 play_fmt_t local_sum[NUM_CORES];
+PI_L1 float local_sum[NUM_CORES];
 
 static inline void barrier()
 {
@@ -135,7 +135,7 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
     int perm_idx;
     int tot_ops;
     int rem_ops;
-    play_fmt_t sum;
+    float sum;
     int start;
     int block;
     int left;
@@ -167,8 +167,8 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
 
         if (tot_ops != 0) {
             do {
-                play_fmt_t y1, y2;
-                play_fmt_t mat1, mat2;
+                float y1, y2;
+                float mat1, mat2;
 
                 y1 = y[k];
                 y2 = y[k + 1];
@@ -211,8 +211,8 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
 
         if (tot_ops != 0) {
             do {
-                play_fmt_t mat1, mat2;
-                play_fmt_t result1, result2;
+                float mat1, mat2;
+                float result1, result2;
 
                 result1 = result[k];
                 result2 = result[k + 1];
@@ -254,7 +254,7 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
 static int linalg_lu_solve_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
 {
     int perm_idx;
-    play_fmt_t sum;
+    float sum;
 
     y = pmsis_l1_malloc(dim_M * sizeof(play_fmt_t));
 
