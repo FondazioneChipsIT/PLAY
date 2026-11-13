@@ -20,7 +20,27 @@ def parse_args():
         help="Specifies the execution platform. Allowed values: 'gvsoc' or 'rtl'. Default is 'gvsoc'."
     )
 
+    parser.add_argument(
+        "--format",
+        type=str,
+        choices=["FP32", "FP16", "BF16"],
+        default="FP32",
+        help="Data format of the kernels (PLAY_FORMAT). Default is 'FP32'."
+    )
+    parser.add_argument(
+        "--vectorize",
+        action="store_true",
+        help="Enable the auto-vectorization of the 16-bit kernels (VECTORIZE=1 of the test Makefiles)."
+    )
+    parser.add_argument(
+        "--packed",
+        action="store_true",
+        help="Build the hand-written packed-SIMD kernels (PACKED=1 of the test Makefiles, FP16 and BF16 only)."
+    )
+
     args = parser.parse_args()
+    if args.packed and args.format == "FP32":
+        parser.error("--packed requires --format FP16 or BF16")
     return args
 
 def set_paths(args):
@@ -103,7 +123,11 @@ def check_run_status(returncode, output, stats_saved):
 def run_test_case(args, paths, test_dir_name, num_cores):
     current_test_dir = os.path.join(paths.test_root, test_dir_name)
 
-    make_command = f"make clean all run STATS=1 USE_CLUSTER=1 NUM_CORES={num_cores} TARGET=PULP_OPEN platform={args.platform}"
+    make_command = f"make clean all run STATS=1 USE_CLUSTER=1 NUM_CORES={num_cores} TARGET=PULP_OPEN platform={args.platform} FORMAT={args.format}"
+    if args.vectorize:
+        make_command += " VECTORIZE=1"
+    if args.packed:
+        make_command += " PACKED=1"
 
     print(f"\n--- Running {test_dir_name} with {num_cores} cores ---")
     print(f"Command: cd {current_test_dir} && {make_command}")
