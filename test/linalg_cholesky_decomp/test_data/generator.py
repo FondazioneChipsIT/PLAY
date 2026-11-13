@@ -23,10 +23,16 @@ def generate_matrix(dim):
     """Generate a square matrix of floats with given dimensions."""
     return np.random.randn(dim, dim)
 
-def get_sdp_mat(mat, eps=1e-6):
-    """Generate a symmetric positive definite matrix"""
+def get_sdp_mat(mat, margin=16.0):
+    """Generate a symmetric positive definite matrix.
+
+    The margin added to the diagonal keeps the pivots well above the rounding error of the
+    16-bit formats (with margin 1e-6 the last pivots of a 64x64 matrix are below 0.1, and
+    the sum of 63 squares that produces them loses them entirely in FP16/BF16).
+    data_orig.h is the previous data set (margin 1e-6), kept for comparisons with the
+    campaigns run before the 16-bit formats."""
     mat =  mat @ mat.T
-    mat += np.eye(mat.shape[0]) * eps
+    mat += np.eye(mat.shape[0]) * margin
     mat = (mat + mat.T) / 2
     return mat
 
