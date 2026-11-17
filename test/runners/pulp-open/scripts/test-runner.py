@@ -37,6 +37,13 @@ def parse_args():
         action="store_true",
         help="Build the hand-written packed-SIMD kernels (PACKED=1 of the test Makefiles, FP16 and BF16 only)."
     )
+    parser.add_argument(
+        "--exclude",
+        nargs="+",
+        default=[],
+        metavar="TEST",
+        help="Test directories to skip (e.g. --exclude linalg_svd linalg_svd_jacobi linalg_svd_lsv)."
+    )
 
     args = parser.parse_args()
     if args.packed and args.format == "FP32":
@@ -302,6 +309,10 @@ def main():
     args = parse_args()
     paths = set_paths(args)
     test_dirs = set_test_dirs(paths)
+    unknown = [t for t in args.exclude if t not in test_dirs]
+    if unknown:
+        raise SystemExit(f"--exclude: unknown test(s): {' '.join(unknown)}")
+    test_dirs = [t for t in test_dirs if t not in args.exclude]
 
     outcomes = []
 
