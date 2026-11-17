@@ -9,7 +9,7 @@ PI_L1 play_fmt_t local_min[NUM_CORES];
 
 #ifdef PLAY_PACKED
 
-#define MIN2(a, b)  __builtin_elementwise_minnum((a), (b))
+#define MIN2(a, b)  __FMIN2((a), (b))   /* pulp-sdk builtins: cv.vfmin / vfmin on the packed format */
 
 static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
 {
