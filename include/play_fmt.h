@@ -22,10 +22,18 @@
 typedef float play_fmt_t;
 #define PLAY_FORMAT_NAME "FP32"
 #elif PLAY_FORMAT == PLAY_FMT_FP16
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__FLT16_MANT_DIG__)
+typedef float16 play_fmt_t;        /* pulp-gcc: SmallFloat binary16 (Xf16) */
+#else
 typedef _Float16 play_fmt_t;
+#endif
 #define PLAY_FORMAT_NAME "FP16"
 #elif PLAY_FORMAT == PLAY_FMT_BF16
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__BF16_MANT_DIG__)
+typedef float16alt play_fmt_t;     /* pulp-gcc: SmallFloat binary16alt = bfloat16 (Xf16alt) */
+#else
 typedef __bf16 play_fmt_t;
+#endif
 #define PLAY_FORMAT_NAME "BF16"
 #else
 #error "PLAY_FORMAT must be PLAY_FMT_FP32, PLAY_FMT_FP16 or PLAY_FMT_BF16"
