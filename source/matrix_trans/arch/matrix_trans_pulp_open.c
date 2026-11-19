@@ -43,8 +43,8 @@ static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst
             s0 += 2 * dim_N;
             s1 += 2 * dim_N;
 
-            *(play_fmt_v2_t *) &d0[m] = __builtin_shufflevector(r0, r1, 0, 2);
-            *(play_fmt_v2_t *) &d1[m] = __builtin_shufflevector(r0, r1, 1, 3);
+            *(play_fmt_v2_t *) &d0[m] = __VSHUFFLE2(r0, r1, 0, 2);
+            *(play_fmt_v2_t *) &d1[m] = __VSHUFFLE2(r0, r1, 1, 3);
         }
         if (m < dim_M) {
             d0[m] = s0[0];
