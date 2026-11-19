@@ -40,6 +40,11 @@ ifdef PACKED
 APP_CFLAGS += -DPLAY_PACKED
 endif
 
+# 16-bit formats only: the copy loop must stay a loop, no memcpy() call synthesized by the compiler.
+ifneq ($(FORMAT),FP32)
+APP_CFLAGS += -fno-builtin-memcpy
+endif
+
 ifdef ENABLE_LOGGING
 APP_CFLAGS += -DENABLE_LOGGING
 endif

@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int len)
+static int vector_memcpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src, play_fmt_t *RESTRICT_16BIT dst, const int len)
 {
     const play_fmt_v2_t *s2;
     play_fmt_v2_t *d2;
@@ -38,6 +38,7 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *ds
     op = 0;
 
     if (tot_ops > 0) {
+        UNROLL_16BIT(2)
         do {
             play_fmt_v2_t x1, x2;
 
@@ -66,7 +67,7 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *ds
 
 #else   /* PLAY_PACKED */
 
-static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int len)
+static int vector_memcpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src, play_fmt_t *RESTRICT_16BIT dst, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -88,6 +89,7 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *ds
     i = start;
     op = 0;
 
+    UNROLL_16BIT(2)
     do {
         int idx1, idx2;
         play_fmt_t src1, src2;
@@ -118,7 +120,7 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *ds
 
 #else   /* CLUSTER */
 
-static int vector_memcpy_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, const int len)
+static int vector_memcpy_pulp_open_fc(const play_fmt_t *RESTRICT_16BIT src, play_fmt_t *RESTRICT_16BIT dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src[i];
@@ -128,7 +130,7 @@ static int vector_memcpy_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, co
 
 #endif  /* CLUSTER */
 
-int vector_memcpy_impl(const play_fmt_t *src, play_fmt_t *dst, const int len)
+int vector_memcpy_impl(const play_fmt_t *RESTRICT_16BIT src, play_fmt_t *RESTRICT_16BIT dst, const int len)
 {
     int ret;
 
