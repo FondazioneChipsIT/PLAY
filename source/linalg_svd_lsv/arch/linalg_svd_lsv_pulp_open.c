@@ -10,7 +10,7 @@ static PI_L1 float EPSILON = 1e-12;
 
 #ifdef PLAY_PACKED
 
-static inline void lsv_col(const play_fmt_t *src, const play_fmt_t *mat_V, const play_fmt_t s, play_fmt_t *dst, const int k, const int dim_M, const int dim_N)
+static inline void lsv_col(const play_fmt_t * restrict src, const play_fmt_t * restrict mat_V, const play_fmt_t s, play_fmt_t * restrict dst, const int k, const int dim_M, const int dim_N)
 {
     play_fmt_t s_inv;
     play_fmt_t sum1;
@@ -37,7 +37,7 @@ static inline void lsv_col(const play_fmt_t *src, const play_fmt_t *mat_V, const
     }
 }
 
-static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     play_fmt_v2_t sum2_1;
     play_fmt_v2_t sum2_2;
@@ -108,7 +108,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
 
 #else   /* PLAY_PACKED */
 
-static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int tot_ops_M;
     int rem_ops_M;
@@ -208,7 +208,7 @@ static int linalg_svd_lsv_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *m
 static float ONE_f = 1;
 static float EPSILON = 1e-12;
 
-int linalg_svd_lsv_pulp_open_fc(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
+int linalg_svd_lsv_pulp_open_fc(const play_fmt_t * restrict src, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     float sum;
 
@@ -233,7 +233,7 @@ int linalg_svd_lsv_pulp_open_fc(const play_fmt_t *src, play_fmt_t *mat_V, play_f
 
 #endif  /* CLUSTER */
 
-int linalg_svd_lsv_impl(const play_fmt_t *src, play_fmt_t *mat_V, play_fmt_t *vec_S, play_fmt_t *dst, const int dim_M, const int dim_N)
+int linalg_svd_lsv_impl(const play_fmt_t * restrict src, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int ret;
 

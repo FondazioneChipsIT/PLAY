@@ -24,7 +24,7 @@ static inline void barrier()
 #endif
 }
 
-static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
+static int matrix_set_identity(play_fmt_t * restrict mat, const int dim_M)
 {
     int start;
     int block;
@@ -46,7 +46,7 @@ static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
     return 0;
 }
 
-int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t *mat, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M)
+int linalg_svd_jacobi_pulp_open_cluster( play_fmt_t * restrict mat, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M)
 {
     int pairs_per_round;
     int even_dim;
@@ -225,7 +225,7 @@ static float TWO_f = 2.0f;
 static int MAX_ITER = 200;
 static float EPSILON = 1e-12;
 
-static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
+static int matrix_set_identity(play_fmt_t * restrict mat, const int dim_M)
 {
     for (int m = 0; m < dim_M; m++)
         mat[m * dim_M + m] = ONE_f;
@@ -233,7 +233,7 @@ static int matrix_set_identity(play_fmt_t *mat, const int dim_M)
     return 0;
 }
 
-static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M)
+static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t * restrict mat, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M)
 {
     int iter;
     float max_offdiag;
@@ -324,7 +324,7 @@ static int linalg_svd_jacobi_pulp_open_fc(play_fmt_t *mat, play_fmt_t *mat_V, pl
 
 #endif  /* CLUSTER */
 
-int linalg_svd_jacobi_impl(play_fmt_t *mat, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M)
+int linalg_svd_jacobi_impl(play_fmt_t * restrict mat, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M)
 {
     int ret;
 

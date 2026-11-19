@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
+static int vector_offset_pulp_open_cluster(const play_fmt_t * restrict src, const play_fmt_t offset, play_fmt_t * restrict dst, const int len)
 {
     const play_fmt_v2_t *s2;
     play_fmt_v2_t *d2;
@@ -70,7 +70,7 @@ static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt
 
 #else   /* PLAY_PACKED */
 
-static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
+static int vector_offset_pulp_open_cluster(const play_fmt_t * restrict src, const play_fmt_t offset, play_fmt_t * restrict dst, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -92,6 +92,7 @@ static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt
     i = start;
     op = 0;
 
+    UNROLL_VEC(2)
     do {
         int idx1, idx2;
         play_fmt_t src1, src2;
@@ -123,7 +124,7 @@ static int vector_offset_pulp_open_cluster(const play_fmt_t *src, const play_fmt
 
 #else   /* CLUSTER */
 
-static int vector_offset_pulp_open_fc(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
+static int vector_offset_pulp_open_fc(const play_fmt_t * restrict src, const play_fmt_t offset, play_fmt_t * restrict dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src[i] + offset;
@@ -133,7 +134,7 @@ static int vector_offset_pulp_open_fc(const play_fmt_t *src, const play_fmt_t of
 
 #endif  /* CLUSTER */
 
-int vector_offset_impl(const play_fmt_t *src, const play_fmt_t offset, play_fmt_t *dst, const int len)
+int vector_offset_impl(const play_fmt_t * restrict src, const play_fmt_t offset, play_fmt_t * restrict dst, const int len)
 {
     int ret;
 

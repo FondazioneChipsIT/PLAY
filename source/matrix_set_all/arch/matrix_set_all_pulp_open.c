@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
+static int matrix_set_all_pulp_open_cluster(play_fmt_t * restrict mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     play_fmt_v2_t *m2;
     play_fmt_v2_t val2;
@@ -37,6 +37,9 @@ static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t va
     m2 = (play_fmt_v2_t *) &mat[i];
     pairs = (row_end * dim_N - i) / 2;
 
+    /* CV32E40P hardware loops need at least three instructions: unrolled by 2, the two packed stores
+     * become four and need no nop. gcc 7 ignores the pragma, so the gcc code is unchanged. */
+    UNROLL(2)
     for (j = 0; (j + 1) < pairs; j += 2) {
         m2[j] = val2;
         m2[j + 1] = val2;
@@ -57,7 +60,7 @@ static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t va
 
 #else   /* PLAY_PACKED */
 
-static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
+static int matrix_set_all_pulp_open_cluster(play_fmt_t * restrict mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
@@ -81,6 +84,7 @@ static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t va
     do {
         n = 0;
         ops = 0;
+        UNROLL_VEC(2)
         do {
             mat[m * dim_N + n] = val;
             mat[m * dim_N + (n + 1)] = val;
@@ -110,7 +114,7 @@ static int matrix_set_all_pulp_open_cluster(play_fmt_t *mat, const play_fmt_t va
 
 #else   /* CLUSTER */
 
-static int matrix_set_all_pulp_open_fc(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
+static int matrix_set_all_pulp_open_fc(play_fmt_t * restrict mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     for (int m = 0; m < dim_M; m++)
         for (int n = 0; n < dim_N; n++)
@@ -121,7 +125,7 @@ static int matrix_set_all_pulp_open_fc(play_fmt_t *mat, const play_fmt_t val, co
 
 #endif  /* CLUSTER */
 
-int matrix_set_all_impl(play_fmt_t *mat, const play_fmt_t val, const int dim_M, const int dim_N)
+int matrix_set_all_impl(play_fmt_t * restrict mat, const play_fmt_t val, const int dim_M, const int dim_N)
 {
     int ret;
 

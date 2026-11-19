@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a, const play_fmt_t *RESTRICT_16BIT src_b, const play_fmt_t alpha, play_fmt_t *RESTRICT_16BIT dst, const int len)
+static int vector_axpy_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, const play_fmt_t alpha, play_fmt_t * restrict dst, const int len)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *b2;
@@ -76,7 +76,7 @@ static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a,
 
 #else   /* PLAY_PACKED */
 
-static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a, const play_fmt_t *RESTRICT_16BIT src_b, const play_fmt_t alpha, play_fmt_t *RESTRICT_16BIT dst, const int len)
+static int vector_axpy_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, const play_fmt_t alpha, play_fmt_t * restrict dst, const int len)
 {
     int rem_ops;
     int tot_ops;
@@ -98,7 +98,7 @@ static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a,
     i = start;
     op = 0;
 
-    UNROLL_16BIT(2)
+    UNROLL_VEC(2)
     do {
         int idx1, idx2;
         play_fmt_t a1, a2;
@@ -132,7 +132,7 @@ static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a,
 
 #else   /* CLUSTER */
 
-static int vector_axpy_pulp_open_fc(const play_fmt_t *RESTRICT_16BIT src_a, const play_fmt_t *RESTRICT_16BIT src_b, const play_fmt_t alpha, play_fmt_t *RESTRICT_16BIT dst, const int len)
+static int vector_axpy_pulp_open_fc(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, const play_fmt_t alpha, play_fmt_t * restrict dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src_a[i] * alpha + src_b[i];
@@ -142,7 +142,7 @@ static int vector_axpy_pulp_open_fc(const play_fmt_t *RESTRICT_16BIT src_a, cons
 
 #endif  /* CLUSTER */
 
-int vector_axpy_impl(const play_fmt_t *RESTRICT_16BIT src_a, const play_fmt_t *RESTRICT_16BIT src_b, const play_fmt_t alpha, play_fmt_t *RESTRICT_16BIT dst, const int len)
+int vector_axpy_impl(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, const play_fmt_t alpha, play_fmt_t * restrict dst, const int len)
 {
     int ret;
 

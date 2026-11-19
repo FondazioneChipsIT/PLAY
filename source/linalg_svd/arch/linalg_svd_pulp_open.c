@@ -7,7 +7,7 @@ PI_L1 play_fmt_t *tmp;
 
 #ifdef  CLUSTER
 
-static int linalg_svd_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M, const int dim_N)
+static int linalg_svd_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict dst, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M, const int dim_N)
 {
     if (pi_core_id() == 0)
         tmp = pmsis_l1_malloc(dim_N * dim_N * sizeof(play_fmt_t));
@@ -33,7 +33,7 @@ static int linalg_svd_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, 
 #else   /* CLUSTER */
 
 
-static int linalg_svd_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M, const int dim_N)
+static int linalg_svd_pulp_open_fc(const play_fmt_t * restrict src, play_fmt_t * restrict dst, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M, const int dim_N)
 {
     tmp = pmsis_l1_malloc(dim_N * dim_N * sizeof(play_fmt_t));
     matrix_mul_trans_A(src, src, tmp, dim_M, dim_N, dim_N);
@@ -45,7 +45,7 @@ static int linalg_svd_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, play_
 
 #endif  /* CLUSTER */
 
-int linalg_svd_impl(const play_fmt_t *src, play_fmt_t *dst, play_fmt_t *mat_V, play_fmt_t *vec_S, const int dim_M, const int dim_N)
+int linalg_svd_impl(const play_fmt_t * restrict src, play_fmt_t * restrict dst, play_fmt_t * restrict mat_V, play_fmt_t * restrict vec_S, const int dim_M, const int dim_N)
 {
     int ret;
 

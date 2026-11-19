@@ -10,7 +10,7 @@ PI_L1 float local_dot[NUM_CORES];
 
 #ifdef PLAY_PACKED
 
-static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_dot_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *b2;
@@ -97,7 +97,7 @@ exit:
 
 #else   /* PLAY_PACKED */
 
-static int vector_dot_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_dot_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     float dot_tmp1;
     float dot_tmp2;
@@ -174,7 +174,7 @@ exit:
 
 float ZERO_f = 0.0f;
 
-static int vector_dot_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_dot_pulp_open_fc(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     *dst = ZERO_f;
     for (int i = 0; i < len; i++)
@@ -185,7 +185,7 @@ static int vector_dot_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *sr
 
 #endif  /* CLUSTER */
 
-int vector_dot_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+int vector_dot_impl(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     int ret;
 

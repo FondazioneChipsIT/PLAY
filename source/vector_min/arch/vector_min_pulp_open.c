@@ -11,7 +11,7 @@ PI_L1 play_fmt_t local_min[NUM_CORES];
 
 #define MIN2(a, b)  __FMIN2((a), (b))   /* pulp-sdk builtins: cv.vfmin / vfmin on the packed format */
 
-static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
+static int vector_min_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict min, const int len)
 {
     const play_fmt_v2_t *src2;
     play_fmt_v2_t min2;
@@ -84,7 +84,7 @@ exit:
 
 #else   /* PLAY_PACKED */
 
-static int vector_min_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *min, const int len)
+static int vector_min_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict min, const int len)
 {
     play_fmt_t min_tmp;
     int block;
@@ -156,7 +156,7 @@ exit:
 
 #else   /* CLUSTER */
 
-static int vector_min_pulp_open_fc(const play_fmt_t *src, play_fmt_t *min, const int len)
+static int vector_min_pulp_open_fc(const play_fmt_t * restrict src, play_fmt_t * restrict min, const int len)
 {
     *min = src[0];
     for (int i = 1; i < len; i++) {
@@ -169,7 +169,7 @@ static int vector_min_pulp_open_fc(const play_fmt_t *src, play_fmt_t *min, const
 
 #endif  /* CLUSTER */
 
-int vector_min_impl(const play_fmt_t *src, play_fmt_t *min, const int len)
+int vector_min_impl(const play_fmt_t * restrict src, play_fmt_t * restrict min, const int len)
 {
     int ret;
 

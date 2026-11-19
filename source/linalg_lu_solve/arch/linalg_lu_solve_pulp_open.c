@@ -17,7 +17,7 @@ static inline void barrier()
 }
 #ifdef PLAY_PACKED
 
-static inline play_fmt_t row_dot(const play_fmt_t *row, const play_fmt_t *vec, const int start, const int end)
+static inline play_fmt_t row_dot(const play_fmt_t * restrict row, const play_fmt_t * restrict vec, const int start, const int end)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *v2;
@@ -64,7 +64,7 @@ static inline play_fmt_t row_dot(const play_fmt_t *row, const play_fmt_t *vec, c
     return sum + sum2_1[0] + sum2_1[1];
 }
 
-int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
+int linalg_lu_solve_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec, const int * restrict perm, play_fmt_t * restrict result, const int dim_M, const int dim_N)
 {
     int perm_idx;
     play_fmt_t sum;
@@ -130,7 +130,7 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
 #else   /* PLAY_PACKED */
 
 
-int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
+int linalg_lu_solve_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec, const int * restrict perm, play_fmt_t * restrict result, const int dim_M, const int dim_N)
 {
     int perm_idx;
     int tot_ops;
@@ -251,7 +251,7 @@ int linalg_lu_solve_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *v
 
 #else   /* CLUSTER */
 
-static int linalg_lu_solve_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
+static int linalg_lu_solve_pulp_open_fc(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec, const int * restrict perm, play_fmt_t * restrict result, const int dim_M, const int dim_N)
 {
     int perm_idx;
     float sum;
@@ -282,7 +282,7 @@ static int linalg_lu_solve_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t 
 
 #endif  /* CLUSTER */
 
-int linalg_lu_solve_impl(const play_fmt_t *mat, const play_fmt_t *vec, const int *perm, play_fmt_t *result, const int dim_M, const int dim_N)
+int linalg_lu_solve_impl(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec, const int * restrict perm, play_fmt_t * restrict result, const int dim_M, const int dim_N)
 {
     int ret;
 

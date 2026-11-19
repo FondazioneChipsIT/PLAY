@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int matrix_mul_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int dim_M, const int dim_N, const int dim_P)
 {
     play_fmt_v2_t sum2_1;
     play_fmt_v2_t sum2_2;
@@ -79,7 +79,7 @@ static int matrix_mul_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_
 
 #else   /* PLAY_PACKED */
 
-static int matrix_mul_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_pulp_open_cluster(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int row_start;
     int row_end;
@@ -159,7 +159,7 @@ static int matrix_mul_pulp_open_cluster(const play_fmt_t *src_a, const play_fmt_
 
 #else   /* CLUSTER */
 
-static int matrix_mul_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
+static int matrix_mul_pulp_open_fc(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int dim_M, const int dim_N, const int dim_P)
 {
     float sum;
 
@@ -178,7 +178,7 @@ static int matrix_mul_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *sr
 #endif  /* CLUSTER */
 
 
-int matrix_mul_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int dim_M, const int dim_N, const int dim_P)
+int matrix_mul_impl(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int dim_M, const int dim_N, const int dim_P)
 {
     int ret;
 

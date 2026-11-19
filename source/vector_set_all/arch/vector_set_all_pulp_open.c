@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t val, const int len)
+static int vector_set_all_pulp_open_cluster(play_fmt_t * restrict vec, const play_fmt_t val, const int len)
 {
     play_fmt_v2_t *vec2;
     play_fmt_v2_t val2;
@@ -40,6 +40,9 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
     op = 0;
 
     if (tot_ops > 0) {
+        /* CV32E40P hardware loops need at least three instructions: unrolled by 2, the two packed stores
+         * become four and need no nop. gcc 7 ignores the pragma, so the gcc code is unchanged. */
+        UNROLL(2)
         do {
             vec2[0] = val2;
             vec2[1] = val2;
@@ -62,7 +65,7 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
 
 #else   /* PLAY_PACKED */
 
-static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t val, const int len)
+static int vector_set_all_pulp_open_cluster(play_fmt_t * restrict vec, const play_fmt_t val, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -84,6 +87,7 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
     i = start;
     op = 0;
 
+    UNROLL_VEC(2)
     do {
         int idx1, idx2;
 
@@ -111,7 +115,7 @@ static int vector_set_all_pulp_open_cluster(play_fmt_t *vec, const play_fmt_t va
 
 #else   /* CLUSTER */
 
-static int vector_set_all_pulp_open_fc(play_fmt_t *vec, const play_fmt_t val, const int len)
+static int vector_set_all_pulp_open_fc(play_fmt_t * restrict vec, const play_fmt_t val, const int len)
 {
     for (int i = 0; i < len; i++)
         vec[i] = val;
@@ -121,7 +125,7 @@ static int vector_set_all_pulp_open_fc(play_fmt_t *vec, const play_fmt_t val, co
 
 #endif  /* CLUSTER */
 
-int vector_set_all_impl(play_fmt_t *vec, const play_fmt_t val, const int len)
+int vector_set_all_impl(play_fmt_t * restrict vec, const play_fmt_t val, const int len)
 {
     int ret;
 

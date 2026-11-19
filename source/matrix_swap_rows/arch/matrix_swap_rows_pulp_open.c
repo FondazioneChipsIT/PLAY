@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
+static int matrix_swap_rows_pulp_open_cluster(play_fmt_t * restrict mat, const int row_a, const int row_b, const int dim_N)
 {
     play_fmt_v2_t *a2;
     play_fmt_v2_t *b2;
@@ -62,7 +62,7 @@ static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, 
 
 #else   /* PLAY_PACKED */
 
-static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
+static int matrix_swap_rows_pulp_open_cluster(play_fmt_t * restrict mat, const int row_a, const int row_b, const int dim_N)
 {
     play_fmt_t tmp;
     int start;
@@ -77,6 +77,7 @@ static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, 
     start = id * block + (id < left ? id : left);
     end = start + block + (id < left ? 1 : 0);
 
+    UNROLL_VEC(2)
     for (int n = start; n < end; n++) {
         tmp = mat[row_a * dim_N + n];
         mat[row_a * dim_N + n] = mat[row_b * dim_N + n];
@@ -94,7 +95,7 @@ static int matrix_swap_rows_pulp_open_cluster(play_fmt_t *mat, const int row_a, 
 
 #else   /* CLUSTER */
 
-static int matrix_swap_rows_pulp_open_fc(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
+static int matrix_swap_rows_pulp_open_fc(play_fmt_t * restrict mat, const int row_a, const int row_b, const int dim_N)
 {
     play_fmt_t tmp;
 
@@ -109,7 +110,7 @@ static int matrix_swap_rows_pulp_open_fc(play_fmt_t *mat, const int row_a, const
 
 #endif  /* CLUSTER */
 
-int matrix_swap_rows_impl(play_fmt_t *mat, const int row_a, const int row_b, const int dim_N)
+int matrix_swap_rows_impl(play_fmt_t * restrict mat, const int row_a, const int row_b, const int dim_N)
 {
     int ret;
 

@@ -10,7 +10,7 @@ PI_L1 float ONE_f = 1.0f;
 
 #ifdef PLAY_PACKED
 
-static int linalg_gemv_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *x2;
@@ -81,7 +81,7 @@ static int linalg_gemv_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t
 
 #else   /* PLAY_PACKED */
 
-static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, const int m, const int dim_M, const int dim_N, float *sum1, float *sum2)
+static inline void mat_vec_mul(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const int m, const int dim_M, const int dim_N, float * restrict sum1, float * restrict sum2)
 {
     int num_ops;
     int ops;
@@ -109,7 +109,7 @@ static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, c
     } while (ops < num_ops);
 }
 
-static int linalg_gemv_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
@@ -171,7 +171,7 @@ static int linalg_gemv_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t
 float ZERO_f = 0.0f;
 float ONE_f = 1.0f;
 
-static int linalg_gemv_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_pulp_open_fc(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     float sum;
 
@@ -197,7 +197,7 @@ static int linalg_gemv_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec
 
 #endif  /* CLUSTER */
 
-int linalg_gemv_impl(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+int linalg_gemv_impl(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int ret;
 

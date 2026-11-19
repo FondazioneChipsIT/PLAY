@@ -7,7 +7,7 @@
 
 static PI_L1 float ONE_f = 1;
 
-static inline int swap_elems(int *vec, const int idx_a, const int idx_b)
+static inline int swap_elems(int * restrict vec, const int idx_a, const int idx_b)
 {
     int tmp;
 
@@ -18,7 +18,7 @@ static inline int swap_elems(int *vec, const int idx_a, const int idx_b)
     return 0;
 }
 
-static inline int swap_rows(play_fmt_t *mat, const int row_a, const int row_b, const int dim_M, const int dim_N)
+static inline int swap_rows(play_fmt_t * restrict mat, const int row_a, const int row_b, const int dim_M, const int dim_N)
 {
     for (int n = 0; n < dim_N; n++) {
         int idx_a, idx_b;
@@ -40,7 +40,7 @@ static inline int swap_rows(play_fmt_t *mat, const int row_a, const int row_b, c
 PI_L1 float pivot;
 PI_L1 float p_inv;
 
-static inline int set_permutation_identity(int *vec, const int len)
+static inline int set_permutation_identity(int * restrict vec, const int len)
 {
     int num_ops;
     int rem_ops;
@@ -81,7 +81,7 @@ static inline int set_permutation_identity(int *vec, const int len)
 
 #ifdef PLAY_PACKED
 
-static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
+static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t * restrict mat, int * restrict perm, const int dim_M, const int dim_N)
 {
     play_fmt_v2_t factor2;
     int dim_min;
@@ -178,7 +178,7 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
 
 #else   /* PLAY_PACKED */
 
-static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
+static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t * restrict mat, int * restrict perm, const int dim_M, const int dim_N)
 {
     int dim_min;
     int id;
@@ -260,7 +260,7 @@ static int linalg_lu_decomp_pulp_open_cluster(play_fmt_t *mat, int *perm, const 
 
 #else   /* CLUSTER */
 
-static int set_permutation_identity(int *vec, const int len)
+static int set_permutation_identity(int * restrict vec, const int len)
 {
     for (int i = 0; i < len; i++)
         vec[i] = i;
@@ -268,7 +268,7 @@ static int set_permutation_identity(int *vec, const int len)
     return 0;
 }
 
-static int linalg_lu_decomp_pulp_open_fc(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
+static int linalg_lu_decomp_pulp_open_fc(play_fmt_t * restrict mat, int * restrict perm, const int dim_M, const int dim_N)
 {
     float factor;
     float pivot;
@@ -321,7 +321,7 @@ static int linalg_lu_decomp_pulp_open_fc(play_fmt_t *mat, int *perm, const int d
 
 #endif  /* CLUSTER */
 
-int linalg_lu_decomp_impl(play_fmt_t *mat, int *perm, const int dim_M, const int dim_N)
+int linalg_lu_decomp_impl(play_fmt_t * restrict mat, int * restrict perm, const int dim_M, const int dim_N)
 {
     int ret;
 

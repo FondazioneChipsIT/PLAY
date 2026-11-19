@@ -14,16 +14,14 @@
 #endif
 
 /*
- * Code-generation hints applied only to the 16-bit formats (FP16, BF16): the FP32 kernels
- * stay as they were, so the FP32 results remain comparable with the previous campaigns.
- * TODO: remove once LLVM development is concluded
+ * Unrolling hint for the loops that the compiler auto-vectorizes: active only in the auto-vectorized
+ * builds (VECTORIZE=1 defines PLAY_VECTORIZE), empty in the scalar and packed builds, where unrolling
+ * the loop only adds an index update per iteration.
  */
-#if PLAY_FORMAT == PLAY_FMT_FP32
-#define RESTRICT_16BIT
-#define UNROLL_16BIT(n)
+#ifdef PLAY_VECTORIZE
+#define UNROLL_VEC(n) UNROLL(n)
 #else
-#define RESTRICT_16BIT  restrict
-#define UNROLL_16BIT(n) UNROLL(n)
+#define UNROLL_VEC(n)
 #endif
 
 /**

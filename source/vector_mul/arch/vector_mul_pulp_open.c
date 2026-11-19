@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int vector_mul_pulp_open_parallel(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_mul_pulp_open_parallel(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *b2;
@@ -72,7 +72,7 @@ static int vector_mul_pulp_open_parallel(const play_fmt_t *src_a, const play_fmt
 
 #else   /* PLAY_PACKED */
 
-static int vector_mul_pulp_open_parallel(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_mul_pulp_open_parallel(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     int tot_ops;
     int rem_ops;
@@ -94,6 +94,7 @@ static int vector_mul_pulp_open_parallel(const play_fmt_t *src_a, const play_fmt
     i = start;
     op = 0;
 
+    UNROLL_VEC(2)
     do {
         int idx1, idx2;
         play_fmt_t a1, a2;
@@ -127,7 +128,7 @@ static int vector_mul_pulp_open_parallel(const play_fmt_t *src_a, const play_fmt
 
 #else  /* CLUSTER */
 
-static int vector_mul_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+static int vector_mul_pulp_open_fc(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     for (int i = 0; i < len; i++)
         dst[i] = src_a[i] * src_b[i];
@@ -137,7 +138,7 @@ static int vector_mul_pulp_open_fc(const play_fmt_t *src_a, const play_fmt_t *sr
 
 #endif  /* CLUSTER */
 
-int vector_mul_impl(const play_fmt_t *src_a, const play_fmt_t *src_b, play_fmt_t *dst, const int len)
+int vector_mul_impl(const play_fmt_t * restrict src_a, const play_fmt_t * restrict src_b, play_fmt_t * restrict dst, const int len)
 {
     int ret;
 

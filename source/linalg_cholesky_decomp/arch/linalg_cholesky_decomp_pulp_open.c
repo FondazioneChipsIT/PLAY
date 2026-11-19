@@ -22,7 +22,7 @@ static inline void barrier()
 
 #ifdef PLAY_PACKED
 
-static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim)
+static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim)
 {
     const play_fmt_v2_t *a2;
     const play_fmt_v2_t *b2;
@@ -164,7 +164,7 @@ static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t *src, play_
 
 #else   /* PLAY_PACKED */
 
-static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim)
+static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim)
 {
     int m, n, k;
     int num_ops;
@@ -286,7 +286,7 @@ static int linalg_cholesky_decomp_pulp_open_cluster(const play_fmt_t *src, play_
 
 float ONE_f = 1.0f;
 
-static int linalg_cholesky_decomp_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst,  const int dim)
+static int linalg_cholesky_decomp_pulp_open_fc(const play_fmt_t * restrict src, play_fmt_t * restrict dst,  const int dim)
 {
     for (int m = 0; m < dim; m++) {
         float sum = 0;
@@ -308,7 +308,7 @@ static int linalg_cholesky_decomp_pulp_open_fc(const play_fmt_t *src, play_fmt_t
 
 #endif  /* CLUSTER */
 
-int linalg_cholesky_decomp_impl(const play_fmt_t *src, play_fmt_t *dst, const int dim)
+int linalg_cholesky_decomp_impl(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim)
 {
     int ret;
 

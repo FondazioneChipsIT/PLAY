@@ -41,7 +41,13 @@ endif
 endif
 APP_CFLAGS += -DPLAY_FORMAT=PLAY_FMT_$(FORMAT)
 
+# Copy loops stay loops: no memcpy() call synthesized by the compiler (no kernel calls memcpy explicitly).
+ifeq ($(TARGET),PULP_OPEN)
+APP_CFLAGS += -fno-builtin-memcpy
+endif
+
 # Packed-SIMD autovectorization of the narrow formats (clang only), off by default.
+# PLAY_VECTORIZE switches on UNROLL_VEC (play.h) in the kernels.
 ifdef VECTORIZE
-APP_CFLAGS += -mno-strict-align -mllvm -riscv-xcvhv-vectorize
+APP_CFLAGS += -mno-strict-align -mllvm -riscv-xcvhv-vectorize -DPLAY_VECTORIZE
 endif

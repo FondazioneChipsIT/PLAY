@@ -7,7 +7,7 @@
 
 #ifdef PLAY_PACKED
 
-static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int matrix_trans_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int col_pairs;
     int pair_start;
@@ -67,7 +67,7 @@ static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst
 
 #else   /* PLAY_PACKED */
 
-static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int matrix_trans_pulp_open_cluster(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int col_start;
     int col_end;
@@ -124,7 +124,7 @@ static int matrix_trans_pulp_open_cluster(const play_fmt_t *src, play_fmt_t *dst
 
 #else   /* CLUSTER */
 
-static int matrix_trans_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int matrix_trans_pulp_open_fc(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     for (int m = 0; m < dim_M; m++)
         for (int n = 0; n < dim_N; n++)
@@ -135,7 +135,7 @@ static int matrix_trans_pulp_open_fc(const play_fmt_t *src, play_fmt_t *dst, con
 
 #endif  /* CLUSTER */
 
-int matrix_trans_impl(const play_fmt_t *src, play_fmt_t *dst, const int dim_M, const int dim_N)
+int matrix_trans_impl(const play_fmt_t * restrict src, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int ret;
 

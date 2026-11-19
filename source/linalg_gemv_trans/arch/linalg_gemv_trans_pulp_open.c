@@ -10,7 +10,7 @@ PI_L1 float ONE_f = 1.0f;
 
 #ifdef PLAY_PACKED
 
-static inline void gemv_trans_col(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int n, const int dim_M, const int dim_N)
+static inline void gemv_trans_col(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int n, const int dim_M, const int dim_N)
 {
     play_fmt_t sum1;
     play_fmt_t sum2;
@@ -27,7 +27,7 @@ static inline void gemv_trans_col(const play_fmt_t *mat, const play_fmt_t *vec_x
     dst[n] = alpha * (sum1 + sum2) + beta * vec_y[n];
 }
 
-static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     play_fmt_v2_t sum2_1;
     play_fmt_v2_t sum2_2;
@@ -107,7 +107,7 @@ static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play
 
 #else   /* PLAY_PACKED */
 
-static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, const int n, const int dim_M, const int dim_N, float *sum1, float *sum2)
+static inline void mat_vec_mul(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const int n, const int dim_M, const int dim_N, float * restrict sum1, float * restrict sum2)
 {
     int num_ops;
     int ops;
@@ -135,7 +135,7 @@ static inline void mat_vec_mul(const play_fmt_t *mat, const play_fmt_t *vec_x, c
     } while (ops < num_ops);
 }
 
-static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int row_start;
     int row_end;
@@ -198,7 +198,7 @@ static int linalg_gemv_trans_pulp_open_cluster(const play_fmt_t *mat, const play
 float ZERO_f = 0.0f;
 float ONE_f = 1.0f;
 
-static int linalg_gemv_trans_pulp_open_fc(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+static int linalg_gemv_trans_pulp_open_fc(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     float sum;
 
@@ -224,7 +224,7 @@ static int linalg_gemv_trans_pulp_open_fc(const play_fmt_t *mat, const play_fmt_
 
 #endif  /* CLUSTER */
 
-int linalg_gemv_trans_impl(const play_fmt_t *mat, const play_fmt_t *vec_x, const play_fmt_t *vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t *dst, const int dim_M, const int dim_N)
+int linalg_gemv_trans_impl(const play_fmt_t * restrict mat, const play_fmt_t * restrict vec_x, const play_fmt_t * restrict vec_y, const play_fmt_t alpha, const play_fmt_t beta, play_fmt_t * restrict dst, const int dim_M, const int dim_N)
 {
     int ret;
 
