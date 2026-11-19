@@ -44,7 +44,6 @@ static int vector_axpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src_a,
     op = 0;
 
     if (tot_ops > 0) {
-        UNROLL_16BIT(2)
         do {
             play_fmt_v2_t a1, a3;
             play_fmt_v2_t b1, b3;

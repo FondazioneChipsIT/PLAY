@@ -38,7 +38,6 @@ static int vector_memcpy_pulp_open_cluster(const play_fmt_t *RESTRICT_16BIT src,
     op = 0;
 
     if (tot_ops > 0) {
-        UNROLL_16BIT(2)
         do {
             play_fmt_v2_t x1, x2;
 
