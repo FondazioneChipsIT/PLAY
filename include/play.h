@@ -3,6 +3,29 @@
 
 #include "play_fmt.h"
 
+/* Loop unrolling hint for the two compilers (count = iterations per unrolled body). */
+#define DO_PRAGMA(x) _Pragma(#x)
+#if defined(__clang__)
+#define UNROLL(n) DO_PRAGMA(clang loop unroll_count(n))
+#elif defined(__GNUC__)
+#define UNROLL(n) DO_PRAGMA(GCC unroll n)
+#else
+#define UNROLL(n)
+#endif
+
+/*
+ * Code-generation hints applied only to the 16-bit formats (FP16, BF16): the FP32 kernels
+ * stay as they were, so the FP32 results remain comparable with the previous campaigns.
+ * TODO: remove once LLVM development is concluded
+ */
+#if PLAY_FORMAT == PLAY_FMT_FP32
+#define RESTRICT_16BIT
+#define UNROLL_16BIT(n)
+#else
+#define RESTRICT_16BIT  restrict
+#define UNROLL_16BIT(n) UNROLL(n)
+#endif
+
 /**
  * @brief Prints hello world message
  *
