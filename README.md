@@ -132,7 +132,7 @@ For testing, several make flags are available:
     - `USE_CLUSTER=1` — Run on the cluster (multi-core) instead of the fabric controller (default)
     - `NUM_CORES=<n>` — Number of cluster cores when `USE_CLUSTER=1` (default `NUM_CORES=1`, max value `NUM_CORES=8`)
     - `FORMAT=<format>` — Data format of the kernels and of the test data: `FP32` (default), `FP16` or `BF16` (see [Data Formats](#data-formats); the narrow formats need a clang toolchain whose `-march` carries the matching extensions)
-    - `VECTORIZE=1` — Enable the packed-SIMD autovectorizer of the narrow formats (`-mno-strict-align -mllvm -riscv-xcvhv-vectorize`, clang only)
+    - `VECTORIZE=1` — Enable the packed-SIMD autovectorizer of the narrow formats (`-mno-strict-align -mllvm -riscv-xcv-packed-fp-vectorize`, clang only)
     - `PACKED=1` — Build the explicit packed-SIMD kernels where they exist (`-DPLAY_PACKED`, narrow formats only; see [Data Formats](#data-formats))
 
 - Flags for `SPATZ`

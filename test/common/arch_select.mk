@@ -49,5 +49,5 @@ endif
 # Packed-SIMD autovectorization of the narrow formats (clang only), off by default.
 # PLAY_VECTORIZE switches on UNROLL_VEC (play.h) in the kernels.
 ifdef VECTORIZE
-APP_CFLAGS += -mno-strict-align -mllvm -riscv-xcvhv-vectorize -DPLAY_VECTORIZE
+APP_CFLAGS += -mno-strict-align -mllvm -riscv-xcv-packed-fp-vectorize -DPLAY_VECTORIZE
 endif
